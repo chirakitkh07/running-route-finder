@@ -23,6 +23,7 @@ import '../providers/notification_provider.dart';
 import '../l10n/app_strings.dart';
 import 'map_screen.dart';
 import '../l10n/tr.dart';
+import '../widgets/pwa_install_prompt.dart';
 import 'package:demo20426/providers/theme_provider.dart';
 
 class FeedScreen extends StatefulWidget {
@@ -266,6 +267,9 @@ class _FeedScreenState extends State<FeedScreen> {
                   ),
                 ],
               ),
+
+              // ─── PWA Install Prompt (สำหรับ Web / iOS Safari) ─────────
+              const SliverToBoxAdapter(child: PwaInstallPrompt()),
 
               // ─── Last Run Card ────────────────────────────────
               if (widget.lastRun != null)
