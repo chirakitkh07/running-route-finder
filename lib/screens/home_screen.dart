@@ -11,6 +11,9 @@ import '../providers/notification_provider.dart';
 import '../models/app_notification.dart';
 import '../widgets/in_app_notification_banner.dart';
 import '../l10n/app_strings.dart';
+import '../services/update_service.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter/foundation.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -30,6 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _rebuildScreens();
+    UpdateService.instance.init();
   }
 
   /// เรียกทุกครั้งที่ต้องสร้าง screen list ใหม่ (route เปลี่ยน / run จบ)
@@ -100,6 +104,123 @@ class _HomeScreenState extends State<HomeScreen> {
               } else {
                 setState(() => _currentIndex = 0); // Feed tab
               }
+            },
+          ),
+
+          // ─── Web Update Banner (แถบ "มีเวอร์ชันใหม่ – แตะเพื่ออัปเดต") ─────────
+          if (kIsWeb && _currentIndex != 2)
+            ValueListenableBuilder<bool>(
+              valueListenable: UpdateService.instance.hasWebUpdateNotifier,
+              builder: (context, hasUpdate, _) {
+                if (!hasUpdate) return const SizedBox.shrink();
+                return SafeArea(
+                  child: Align(
+                    alignment: Alignment.topCenter,
+                    child: Container(
+                      margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFFC4C02), Color(0xFFFF6B35)],
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFFC4C02).withValues(alpha: 0.35),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.system_update_alt_rounded, color: Colors.white, size: 20),
+                          const SizedBox(width: 10),
+                          const Expanded(
+                            child: Text(
+                              'มีเวอร์ชันใหม่ – แตะเพื่ออัปเดต',
+                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                            ),
+                          ),
+                          ElevatedButton(
+                            onPressed: () => UpdateService.instance.triggerWebReload(),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: const Color(0xFFFC4C02),
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            ),
+                            child: const Text('อัปเดต', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+
+          // ─── Force Update Dialog (บังคับอัปเดตหากเวอร์ชันต่ำกว่า min_version) ────
+          ValueListenableBuilder<ForceUpdateConfig?>(
+            valueListenable: UpdateService.instance.forceUpdateNotifier,
+            builder: (context, forceConfig, _) {
+              if (forceConfig == null) return const SizedBox.shrink();
+              return Container(
+                color: Colors.black.withValues(alpha: 0.85),
+                alignment: Alignment.center,
+                padding: const EdgeInsets.all(24),
+                child: Material(
+                  color: const Color(0xFF1E1E1E),
+                  borderRadius: BorderRadius.circular(24),
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.upgrade_rounded, color: Color(0xFFFC4C02), size: 48),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'จำเป็นต้องอัปเดตแอป',
+                          style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          forceConfig.message,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.white70, fontSize: 14, height: 1.4),
+                        ),
+                        const SizedBox(height: 24),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: () async {
+                              if (kIsWeb) {
+                                await UpdateService.instance.triggerWebReload();
+                              } else if (forceConfig.latestApkUrl.isNotEmpty) {
+                                final uri = Uri.parse(forceConfig.latestApkUrl);
+                                if (await canLaunchUrl(uri)) {
+                                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                }
+                              }
+                            },
+                            icon: Icon(kIsWeb ? Icons.refresh_rounded : Icons.download_rounded),
+                            label: Text(kIsWeb ? 'รีโหลดแอปเดี๋ยวนี้' : 'ดาวน์โหลดเวอร์ชันใหม่'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFFC4C02),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
             },
           ),
         ],

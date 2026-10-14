@@ -149,5 +149,11 @@ service cloud.firestore {
       }
     }
 
+    // ─── settings/app_config (App Version & Force Update Config) ─────────────
+    match /settings/app_config {
+      allow read: if true;          // ทุกคนอ่านได้เพื่อเช็คเวอร์ชัน
+      allow write: if isAdmin();    // แอดมินเท่านั้นที่แก้ไขเวอร์ชันขั้นต่ำ
+    }
+
   }
 }

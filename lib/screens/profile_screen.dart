@@ -16,6 +16,7 @@ import '../services/safety_service.dart';
 import 'admin_dashboard_screen.dart';
 import 'admin_routes_screen.dart';
 import 'admin_zones_screen.dart';
+import '../services/update_service.dart';
 import '../l10n/tr.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -1141,6 +1142,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16)),
                      ),
+                  ),
+                ),
+              ),
+
+              // ─── App Version Info ──────────────────────────────
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 18, bottom: 8),
+                  child: Center(
+                    child: Text(
+                      'Running Finder v${UpdateService.currentAppVersion}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: pal.textMute,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
                   ),
                 ),
               ),

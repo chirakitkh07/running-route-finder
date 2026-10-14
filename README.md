@@ -95,6 +95,36 @@ firebase deploy --only hosting
   1. เปิดเว็บแอปบน Google Chrome
   2. แตะที่เมนู 3 จุด หรือแถบแบนเนอร์แจ้งเตือนในแอป แล้วเลือก **"ติดตั้งแอป" (Install App)**
 
+### 4. ระบบอัปเดตเวอร์ชันและขั้นตอนการปล่อยเวอร์ชันใหม่ (Release Workflow)
+ระบบมีกลไกตรวจสอบเวอร์ชันอัตโนมัติทั้งบน Mobile และ Web PWA:
+- **Web PWA Soft Update:** ระบบจะเช็คไฟล์ `version.json` เป็นระยะ หากตรวจพบเวอร์ชันใหม่จะแสดงแถบแจ้งเตือนด้านบน *"มีเวอร์ชันใหม่พร้อมใช้งาน"* ให้ผู้ใช้กดอัปเดต โดยเบราว์เซอร์จะเคลียร์ Service Worker เก่าและโหลดโค้ดใหม่ทันที (จะไม่แจ้งเตือนระหว่างที่ผู้ใช้กำลังบันทึกการวิ่ง)
+- **Force Update (บังคับอัปเดต):** กำหนดผ่าน Firestore เอกสาร `settings/app_config`
+  ```json
+  {
+    "min_version": "1.0.1",
+    "latest_apk_url": "https://github.com/chirakitkh07/running-route-finder/releases/latest",
+    "message": "กรุณาอัปเดตแอปพลิเคชันเป็นเวอร์ชันล่าสุดเพื่อความปลอดภัยและฟีเจอร์ใหม่"
+  }
+  ```
+  หากผู้ใช้เปิดแอปด้วยเวอร์ชันต่ำกว่า `min_version` จะปรากฏป๊อปอัปบังคับอัปเดตและลิงก์ไปยังไฟล์ APK ทันที
+
+#### ขั้นตอนการปล่อยเวอร์ชันใหม่:
+1. ปรับเลขเวอร์ชันใน `pubspec.yaml` เช่น `version: 1.0.1+2`
+2. อัปเดต `web/version.json` ให้ตรงกัน:
+   ```json
+   {
+     "version": "1.0.1",
+     "build_number": 2,
+     "release_date": "2026-10-15"
+   }
+   ```
+3. สั่งคอมไพล์และ Deploy Web:
+   ```cmd
+   tool\build_web.bat
+   firebase deploy --only hosting
+   ```
+4. หากต้องการบังคับให้ผู้ใช้เก่าอัปเดต ให้แก้ไขฟิลด์ `min_version` ในคอลเลกชัน `settings/app_config` บน Firestore Console
+
 ---
 
 ## ✅ ฟีเจอร์หลัก
