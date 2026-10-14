@@ -751,9 +751,12 @@ class _MapScreenState extends State<MapScreen> {
                                               const SizedBox(width: 8),
                                               Expanded(
                                                 child: Text(needsReview
-                                                    ? (_isThai
-                                                        ? 'ส่งรายงานแล้ว — รอผู้ดูแลระบบตรวจสอบก่อนแสดงบนแผนที่'
-                                                        : 'Report sent — awaiting admin review before it appears on the map')
+                                                    // บอกสาเหตุที่ต้องรอผู้ดูแล: AI ไม่ตอบสนอง (UC-15 E2) หรือความเชื่อมั่นต่ำกว่าเกณฑ์ (UC-15 A1)
+                                                    ? (moderation.isApiError
+                                                        ? tr('ส่งรายงานแล้ว — ระบบ AI ตรวจสอบไม่สำเร็จ จึงรอผู้ดูแลระบบตรวจสอบก่อนแสดงบนแผนที่',
+                                                            'Report sent — AI check failed, so it awaits admin review before it appears on the map')
+                                                        : tr('ส่งรายงานแล้ว — AI ความเชื่อมั่น ${(moderation.confidence * 100).round()}% (ต่ำกว่า ${(ModerationResult.reviewThreshold * 100).round()}%) จึงรอผู้ดูแลระบบตรวจสอบก่อนแสดงบนแผนที่',
+                                                            'Report sent — AI confidence ${(moderation.confidence * 100).round()}% (below ${(ModerationResult.reviewThreshold * 100).round()}%), awaiting admin review'))
                                                     : _s.reportSuccess),
                                               ),
                                             ],

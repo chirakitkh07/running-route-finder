@@ -64,9 +64,10 @@ class ModerationResult {
 /// ใช้ Gemini REST API ตรวจสอบความถูกต้องของรายงานเหตุการณ์ก่อนบันทึกลงฐานข้อมูล
 class AiModerationService {
   // ─── API Key ─────────────────────────────────────────────────────────────
-  // TODO: ย้ายไปเก็บใน .env หรือ Firebase Remote Config ก่อน release จริง
-  static const String _apiKey =
-      'AQ.Ab8RN6I1Pa24EY2-WDliDoflWAEofcsMBK2Ja5AD3wB7jHr4dA';
+  // ไม่ฝังคีย์ในโค้ด (repo เป็น public) — ส่งตอน build:
+  //   flutter run/build ... --dart-define-from-file=.env.local.json
+  // (.env.local.json อยู่ใน .gitignore, มี {"GEMINI_API_KEY": "..."})
+  static const String _apiKey = String.fromEnvironment('GEMINI_API_KEY');
 
   static const String _baseUrl =
       'https://generativelanguage.googleapis.com/v1beta/models';
@@ -226,7 +227,12 @@ Moderation Rules:
 
 IMPORTANT: Output ONLY a raw JSON object. Do NOT use markdown. Do NOT use code blocks. Do NOT add any text before or after the JSON.
 
-Also give "confidence": a number from 0.0 to 1.0 describing how certain you are of your decision.
+Also give "confidence": a number from 0.0 to 1.0 describing how certain you are of your decision
+(whether valid OR invalid) — NOT how detailed the report is.
+Confidence calibration:
+- A relevant report that matches the selected type (even with a short or empty description) → 0.90–1.00
+- A clear violation (profanity, spam, personal data, contradiction) → 0.90–1.00
+- Use values below 0.80 ONLY when the content is genuinely ambiguous and a human should check it.
 
 Output format (exactly this, no extra text):
 {"valid": true, "confidence": 0.93, "reason": "short reason in English", "user_message": ""}
