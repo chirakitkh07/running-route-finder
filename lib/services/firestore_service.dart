@@ -733,16 +733,12 @@ class FirestoreService {
 
   // ─── IT-08: เส้นทางโปรดในบัญชีผู้ใช้ (users/{uid}.savedRoutes) ─────────
 
-  /// ดึงรายการเส้นทางโปรดที่บันทึกไว้ในบัญชี (คืนลิสต์ว่างถ้าไม่มี/ดึงไม่ได้)
-  Future<List<String>> getSavedRoutes(String uid) async {
-    try {
-      final snap = await _userProfileRef(uid).get();
-      final list = snap.data()?['savedRoutes'];
-      return list is List ? list.map((e) => e.toString()).toList() : <String>[];
-    } catch (e) {
-      debugPrint('[Firestore] ⚠️ getSavedRoutes error: $e');
-      return <String>[];
-    }
+  /// ดึงรายการเส้นทางโปรดที่บันทึกไว้ในบัญชี
+  /// คืน null ถ้าบัญชียังไม่เคยซิงก์เส้นทางโปรด; ดึงไม่ได้จะโยน error ให้ผู้เรียกตัดสินใจ
+  Future<List<String>?> getSavedRoutes(String uid) async {
+    final snap = await _userProfileRef(uid).get();
+    final list = snap.data()?['savedRoutes'];
+    return list is List ? list.map((e) => e.toString()).toList() : null;
   }
 
   /// บันทึกรายการเส้นทางโปรดเข้าบัญชี (merge — ไม่ทับข้อมูลอื่นของผู้ใช้)

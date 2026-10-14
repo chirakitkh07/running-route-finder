@@ -1165,24 +1165,36 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
+  /// คีย์แคชเส้นทางโปรดในเครื่อง แยกตามบัญชี (กันเส้นทางโปรดของบัญชีอื่นในเครื่องเดียวกันปนกัน)
+  static String _favoritesKey(String? uid) => uid == null ? 'savedRoutes' : 'savedRoutes_$uid';
+
   Future<void> _loadFavorites() async {
     final prefs = await SharedPreferences.getInstance();
-    final saved = prefs.getStringList('savedRoutes') ?? [];
-    if (mounted) setState(() => _savedRouteIds = saved.toSet());
-    // IT-08: รวมเส้นทางโปรดที่บันทึกไว้ในบัญชี (เปลี่ยนเครื่อง/ติดตั้งใหม่ก็ยังอยู่)
     final uid = FirebaseAuth.instance.currentUser?.uid;
+    var saved = prefs.getStringList(_favoritesKey(uid));
+    if (saved == null && uid != null) {
+      // ย้ายแคชรุ่นเก่า (ไม่แยกบัญชี) มาเป็นของบัญชีที่ล็อกอินอยู่ครั้งเดียว
+      saved = prefs.getStringList('savedRoutes');
+      await prefs.remove('savedRoutes');
+    }
+    saved ??= [];
+    if (mounted) setState(() => _savedRouteIds = saved!.toSet());
+    // IT-08: เส้นทางโปรดในบัญชีเป็นหลัก (เปลี่ยนเครื่อง/ติดตั้งใหม่ก็ยังอยู่)
     if (uid == null) return;
-    final cloud = await _firestoreService.getSavedRoutes(uid);
-    final merged = {...saved, ...cloud};
-    if (merged.length != saved.length) {
-      await prefs.setStringList('savedRoutes', merged.toList());
+    List<String>? cloud;
+    try {
+      cloud = await _firestoreService.getSavedRoutes(uid);
+    } catch (e) {
+      debugPrint('[Favorites] ดึงเส้นทางโปรดจากบัญชีไม่สำเร็จ ใช้ข้อมูลในเครื่อง: $e');
+      return;
     }
-    if (mounted && merged.length != _savedRouteIds.length) {
-      setState(() => _savedRouteIds = merged);
+    if (cloud == null) {
+      // บัญชียังไม่เคยซิงก์ → อัปโหลดรายการในเครื่องขึ้นบัญชี
+      if (saved.isNotEmpty) _firestoreService.setSavedRoutes(uid, saved);
+      return;
     }
-    if (merged.length != cloud.length) {
-      _firestoreService.setSavedRoutes(uid, merged.toList());
-    }
+    await prefs.setStringList(_favoritesKey(uid), cloud);
+    if (mounted) setState(() => _savedRouteIds = cloud!.toSet());
   }
 
   Future<void> _toggleFavorite(String routeId) async {
@@ -1194,9 +1206,9 @@ class _MapScreenState extends State<MapScreen> {
         _savedRouteIds.add(routeId);
       }
     });
-    await prefs.setStringList('savedRoutes', _savedRouteIds.toList());
-    // IT-08: บันทึกเส้นทางโปรดเข้าบัญชีส่วนตัว
     final uid = FirebaseAuth.instance.currentUser?.uid;
+    await prefs.setStringList(_favoritesKey(uid), _savedRouteIds.toList());
+    // IT-08: บันทึกเส้นทางโปรดเข้าบัญชีส่วนตัว
     if (uid != null) _firestoreService.setSavedRoutes(uid, _savedRouteIds.toList());
   }
 
