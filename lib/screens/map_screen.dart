@@ -4338,6 +4338,8 @@ class _MapScreenState extends State<MapScreen> {
             ? '${distFromUserM.round()} m'
             : '${(distFromUserM / 1000).toStringAsFixed(1)} km')
         : null;
+    final reasons = ZoneRecommender.displayReasons(
+        zone.recommendationReasons, distFromUserM == null ? null : distFromUserM / 1000);
 
     final road = zone.scoreComponents?['road'] as Map?;
     final pm25 = zone.scoreComponents?['pm25'];
@@ -4563,12 +4565,12 @@ class _MapScreenState extends State<MapScreen> {
           ),
 
           // ─── Recommendation Reasons (เหตุผลแนะนำ 2–3 ข้อ) ───
-          if (zone.recommendationReasons.isNotEmpty) ...[
+          if (reasons.isNotEmpty) ...[
             const SizedBox(height: 10),
             Wrap(
               spacing: 6,
               runSpacing: 5,
-              children: zone.recommendationReasons.map((reason) {
+              children: reasons.map((reason) {
                 return Container(
                   padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                   decoration: BoxDecoration(
@@ -5459,6 +5461,8 @@ class _MapScreenState extends State<MapScreen> {
                                   final distText = distM != null
                                       ? (distM < 1000 ? '${distM.round()} m' : '${(distM / 1000).toStringAsFixed(1)} km')
                                       : null;
+                                  final reasons = ZoneRecommender.displayReasons(
+                                      zone.recommendationReasons, distM == null ? null : distM / 1000);
 
                                   final isTop5 = index < 5;
 
@@ -5601,12 +5605,12 @@ class _MapScreenState extends State<MapScreen> {
                                             ),
 
                                             // ── เหตุผลแนะนำ (2-3 ข้อ) ──
-                                            if (zone.recommendationReasons.isNotEmpty) ...[
+                                            if (reasons.isNotEmpty) ...[
                                               const SizedBox(height: 10),
                                               Wrap(
                                                 spacing: 6,
                                                 runSpacing: 4,
-                                                children: zone.recommendationReasons.map((reason) {
+                                                children: reasons.map((reason) {
                                                   return Container(
                                                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                                     decoration: BoxDecoration(

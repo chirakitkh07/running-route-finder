@@ -61,6 +61,22 @@ class ZoneRecommender {
     return r.clamp(0.0, 100.0);
   }
 
+  /// เหตุผลด้านระยะทางจากผู้ใช้ (ขึ้นต้นด้วย 📍) — null ถ้าไกลเกิน 3.5 กม.
+  static String? distanceReason(double userDistKm) {
+    final km = userDistKm.toStringAsFixed(1);
+    if (userDistKm <= 1.5) return tr('📍 ใกล้คุณมาก ($km กม.)', '📍 Very close to you ($km km)');
+    if (userDistKm <= 3.5) return tr('📍 เดินทางสะดวก ($km กม.)', '📍 Convenient distance ($km km)');
+    return null;
+  }
+
+  /// เหตุผลสำหรับแสดงผล: ตัดเหตุผลระยะทางที่คำนวณไว้ก่อน (อาจมาจากแคช/ตำแหน่งอื่น)
+  /// แล้วคำนวณใหม่จากระยะทางปัจจุบัน [userDistKm] (null = ไม่รู้ตำแหน่ง → ไม่แสดง)
+  static List<String> displayReasons(List<String> stored, double? userDistKm) {
+    final rest = stored.where((r) => !r.startsWith('📍')).toList();
+    final near = userDistKm == null ? null : distanceReason(userDistKm);
+    return [?near, ...rest].take(3).toList();
+  }
+
   /// สร้างเหตุผลแนะนำ 2–3 ข้อต่อโซน (Recommendation Reasons)
   ///
   /// คัดเลือกจากจุดเด่นหรือปัจจัยสำคัญ เช่น ความใกล้, ไฟส่องสว่าง, สภาพอากาศ, ทางเท้า
@@ -79,19 +95,8 @@ class ZoneRecommender {
     final road = comps?['roadCharacteristics'] as Map<String, dynamic>?;
 
     // 1. ตรวจสอบระยะทาง
-    if (userDistKm != null) {
-      if (userDistKm <= 1.5) {
-        reasons.add(tr(
-          '📍 ใกล้คุณมาก (${userDistKm.toStringAsFixed(1)} กม.)',
-          '📍 Very close to you (${userDistKm.toStringAsFixed(1)} km)',
-        ));
-      } else if (userDistKm <= 3.5) {
-        reasons.add(tr(
-          '📍 เดินทางสะดวก (${userDistKm.toStringAsFixed(1)} กม.)',
-          '📍 Convenient distance (${userDistKm.toStringAsFixed(1)} km)',
-        ));
-      }
-    }
+    final near = userDistKm == null ? null : distanceReason(userDistKm);
+    if (near != null) reasons.add(near);
 
     // 2. ลักษณะถนน/ทางวิ่ง
     if (road != null) {
