@@ -1,0 +1,30 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Mobile",
+      "request": "launch",
+      "type": "dart"
+    },
+    {
+      "name": "Web (Chrome)",
+      "request": "launch",
+      "type": "dart",
+      "args": [
+        "-d",
+        "chrome"
+      ]
+    },
+    {
+      "name": "Web + API (dart-define)",
+      "request": "launch",
+      "type": "dart",
+      "args": [
+        "-d",
+        "chrome",
+        "--dart-define=API_BASE_URL=https://your-api-domain.com",
+        "--dart-define=VAPID_KEY=YOUR_VAPID_KEY_HERE"
+      ]
+    }
+  ]
+}
