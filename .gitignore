@@ -17,6 +17,7 @@ lib/firebase_options.dart
 # backend/config/*.json
 
 # ===== Build & generated =====
+.firebase/
 build/
 .dart_tool/
 .flutter-plugins-dependencies
@@ -25,7 +26,8 @@ build/
 # ===== IDE =====
 .idea/
 *.iml
-.vscode/
+.vscode/*
+!.vscode/launch.json
 devtools_options.yaml
 
 # ===== OS junk =====
