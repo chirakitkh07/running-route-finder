@@ -93,6 +93,17 @@ class _MapScreenState extends State<MapScreen> {
     'doi_suthep': 'zone_suthep',
   };
 
+  /// เส้นทางยอดนิยมที่ตรงกับโซน (ถ้ามี) — ใช้ผูกปุ่มเส้นทางโปรดในการ์ดโซน
+  RunningRoute? _popularRouteForZone(RunningZone zone) {
+    for (final e in _routeToZoneId.entries) {
+      if (e.value != zone.id) continue;
+      for (final r in ChiangMaiRoutes.routes) {
+        if (r.id == e.key) return r;
+      }
+    }
+    return null;
+  }
+
   /// พื้นที่โซน (ตร.ม.) — ใช้เลือกโซนที่เล็กที่สุดเมื่อแตะจุดที่โซนซ้อนกัน
   double _zoneAreaM2(RunningZone z) =>
       z.polygons.fold(0.0, (s, r) => s + GeoUtils.calculateShoelaceArea(r));
@@ -4418,6 +4429,32 @@ class _MapScreenState extends State<MapScreen> {
                   ],
                 ),
               ),
+              // ❤️ เส้นทางโปรด (IT-08) — โซนที่ตรงกับเส้นทางยอดนิยม ใช้คีย์เดียวกับการ์ดเส้นทาง
+              if (_popularRouteForZone(zone) case final route?) ...[
+                GestureDetector(
+                  onTap: () => _toggleFavorite(route.nameEn),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.all(5),
+                    decoration: BoxDecoration(
+                      color: _savedRouteIds.contains(route.nameEn)
+                          ? const Color(0xFFE74C3C).withValues(alpha: 0.15)
+                          : pal.surface2,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      _savedRouteIds.contains(route.nameEn)
+                          ? Icons.favorite_rounded
+                          : Icons.favorite_border_rounded,
+                      color: _savedRouteIds.contains(route.nameEn)
+                          ? const Color(0xFFE74C3C)
+                          : pal.textMute,
+                      size: 16,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ],
               // Close button
               GestureDetector(
                 onTap: _clearZone,
