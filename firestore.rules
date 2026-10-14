@@ -49,6 +49,11 @@ service cloud.firestore {
         allow read, write: if isOwner(uid);
       }
 
+      // ✅ ผู้ติดต่อฉุกเฉิน (emergency_contacts) ข้ามเครื่อง เฉพาะเจ้าของบัญชีเท่านั้น
+      match /emergency_contacts/{contactId} {
+        allow read, write: if isOwner(uid);
+      }
+
       match /comments/{commentId} {
         allow read, write: if isOwner(uid);
       }
