@@ -65,6 +65,38 @@ node server.js         # หรือ npm start (ถ้าตั้ง script �
 
 ---
 
+## 🌐 PWA (Progressive Web App) สำหรับ iPhone (Safari) และ Web
+
+แอปพลิเคชันรองรับการทำงานในรูปแบบ **PWA (Progressive Web App)** ทำให้ผู้ใช้ iPhone สามารถใช้งานผ่านเบราว์เซอร์ Safari ได้เต็มหน้าจอโดยไม่ต้องติดตั้งผ่าน App Store
+
+### 1. วิธี Build Web PWA
+รันคำสั่งผ่านสคริปต์อัตโนมัติ:
+```cmd
+tool\build_web.bat
+```
+หรือรันคำสั่ง Flutter โดยตรง:
+```bash
+flutter build web --release --dart-define=API_BASE_URL=https://your-api.com --dart-define=VAPID_KEY=YOUR_VAPID_KEY
+```
+
+### 2. วิธี Deploy ขึ้น Firebase Hosting
+หลังจาก Build เสร็จเรียบร้อย (ผลลัพธ์อยู่ที่ `build/web/`):
+```bash
+firebase deploy --only hosting
+```
+
+### 3. วิธีติดตั้งลงหน้าจออุปกรณ์ (Install PWA)
+* **บน iPhone (iOS Safari):**
+  1. เปิดลิงก์เว็บแอปในเบราว์เซอร์ **Safari**
+  2. แตะที่ปุ่ม **"แชร์" (Share)** ที่แถบเมนูด้านล่าง
+  3. เลื่อนลงมาเลือก **"เพิ่มไปยังหน้าจอโฮม" (Add to Home Screen)**
+  4. แตะ **"เพิ่ม" (Add)** ที่มุมขวาบน จะได้ไอคอนแอปบนหน้าจอหลักที่เปิดใช้งานได้แบบเต็มจอ (Standalone)
+* **บน Android (Chrome) หรือ PC:**
+  1. เปิดเว็บแอปบน Google Chrome
+  2. แตะที่เมนู 3 จุด หรือแถบแบนเนอร์แจ้งเตือนในแอป แล้วเลือก **"ติดตั้งแอป" (Install App)**
+
+---
+
 ## ✅ ฟีเจอร์หลัก
 
 ### Core Features
