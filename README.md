@@ -180,6 +180,14 @@ otc10/
 
 ---
 
+## 📚 เอกสารคู่มือ (Documentation)
+
+- 📖 **[คู่มือการใช้งานสำหรับผู้ใช้ทั่วไป (PWA User Guide)](docs/USER_GUIDE_PWA.md)** — วิธีติดตั้งบน iPhone (Safari) / Android, วิธีใช้งานฟีเจอร์หลัก, ข้อจำกัด PWA, และการแก้ปัญหา
+- 💻 **[คู่มือนักพัฒนา (Developer Guide)](docs/DEV_GUIDE_PWA.md)** — สภาพแวดล้อมที่ต้องติดตั้ง, การรันและดีบักใน VS Code, การ build/deploy, และขั้นตอน release
+- 📋 **[รายงานการพัฒนาและสถาปัตยกรรม PWA (Migration Report)](docs/PWA_MIGRATION_REPORT.md)** — รายละเอียดการปรับแต่งระบบ, ผลการทดสอบ, และการวิเคราะห์ข้อจำกัดเชิงเทคนิคสำหรับเล่มโครงงาน
+
+---
+
 ## ⚠️ หมายเหตุ
 
 - ไฟล์ credentials (API keys, service accounts) **ไม่ได้อยู่ใน repo** — ต้องสร้างเองตามขั้นตอนด้านบน
