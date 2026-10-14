@@ -1,0 +1,86 @@
+﻿00:00 +0: loading C:/I/Rmutl/project/code/otc10/test/route_loop_test.dart
+00:00 +0: C:/I/Rmutl/project/code/otc10/test/route_loop_test.dart: RoutingService.extractLoop ตัดติ่งไป-กลับออก เหลือวงปิดเท่าเส้นรอบรูป
+00:00 +1: C:/I/Rmutl/project/code/otc10/test/route_loop_test.dart: RoutingService.extractLoop ติ่งที่มีวงย่อยอยู่ปลายทาง: ทิ้งทางเชื่อมที่เดินไป-กลับ เก็บวงที่ยาวที่สุด
+00:00 +2: C:/I/Rmutl/project/code/otc10/test/route_loop_test.dart: RoutingService.extractLoop ติ่งผอมยาว: ออกทางหนึ่ง กลับอีกทางที่ขนานกัน (ห่าง ~30 ม.) ถูกตัดออก
+00:00 +3: C:/I/Rmutl/project/code/otc10/test/route_loop_test.dart: RoutingService.extractLoop เส้นที่เดินไป-กลับล้วน ๆ ไม่มีวง → คืนลิสต์ว่าง
+00:00 +4: C:/I/Rmutl/project/code/otc10/test/route_loop_test.dart: เส้นทางยอดนิยม (ChiangMaiRoutes) ทุกเส้นใช้ path ที่สร้างจาก Routing API และระยะทางตรงกับ path
+00:00 +5: C:/I/Rmutl/project/code/otc10/test/running_zones_phase1_test.dart: เฟส 1: Unit Tests สำหรับระบบโซนวิ่ง (Running Zones) ZoneService.pointInPolygon (Ray Casting Algorithm) จุดอยู่ภายในรูปหลายเหลี่ยม คืนค่า true
+00:00 +6: C:/I/Rmutl/project/code/otc10/test/running_zones_phase1_test.dart: เฟส 1: Unit Tests สำหรับระบบโซนวิ่ง (Running Zones) ZoneService.pointInPolygon (Ray Casting Algorithm) จุดอยู่ภายในรูปหลายเหลี่ยม คืนค่า true
+00:00 +7: C:/I/Rmutl/project/code/otc10/test/running_zones_phase1_test.dart: เฟส 1: Unit Tests สำหรับระบบโซนวิ่ง (Running Zones) ZoneService.pointInPolygon (Ray Casting Algorithm) จุดอยู่ภายในรูปหลายเหลี่ยม คืนค่า true
+00:00 +8: C:/I/Rmutl/project/code/otc10/test/route_loop_test.dart: เส้นทางวงรอบของโซนที่มีเส้นทางในแอป ใช้เส้นที่แนบถนนไว้แล้วได้ทันที แม้ยังไม่ได้ขอบเขตจริงจาก OSM
+00:00 +9: C:/I/Rmutl/project/code/otc10/test/route_loop_test.dart: เส้นทางวงรอบของโซนที่มีเส้นทางในแอป ใช้เส้นที่แนบถนนไว้แล้วได้ทันที แม้ยังไม่ได้ขอบเขตจริงจาก OSM
+00:00 +10: C:/I/Rmutl/project/code/otc10/test/route_loop_test.dart: เส้นทางวงรอบของโซนที่มีเส้นทางในแอป ใช้เส้นที่แนบถนนไว้แล้วได้ทันที แม้ยังไม่ได้ขอบเขตจริงจาก OSM
+00:00 +11: C:/I/Rmutl/project/code/otc10/test/running_zones_phase1_test.dart: เฟส 1: Unit Tests สำหรับระบบโซนวิ่ง (Running Zones) ZoneService.pointInPolygon (Ray Casting Algorithm) รูปหลายเหลี่ยมที่มีจุดน้อยกว่า 3 จุด คืนค่า false เสมอ
+00:00 +12: C:/I/Rmutl/project/code/otc10/test/running_zones_phase2_test.dart: เฟส 2: Unit Tests ระบบค้นหาและจัดอันดับโซนวิ่งอัตโนมัติ ZoneRecommender — สูตรคำนวณคะแนนแนะนำ R กรณีโซนอยู่ที่ระยะ 0 กม. (d = 0) ได้ S_dist = 100 เต็ม
+00:00 +13: C:/I/Rmutl/project/code/otc10/test/running_zones_phase1_test.dart: เฟส 1: Unit Tests สำหรับระบบโซนวิ่ง (Running Zones) ZoneService.pointInPolygon (Ray Casting Algorithm) รูปหลายเหลี่ยมรูปตัว L (concave polygon)
+00:00 +14: C:/I/Rmutl/project/code/otc10/test/running_zones_phase2_test.dart: เฟส 2: Unit Tests ระบบค้นหาและจัดอันดับโซนวิ่งอัตโนมัติ ZoneRecommender — สูตรคำนวณคะแนนแนะนำ R ความยาวทางวิ่ง walkableLengthKm >= 3.0 กม. ได้ S_len เต็ม 100
+00:00 +15: C:/I/Rmutl/project/code/otc10/test/running_zones_phase1_test.dart: เฟส 1: Unit Tests สำหรับระบบโซนวิ่ง (Running Zones) bufferPolyline (สร้างแถบขอบเขตริบบอน) จำนวนจุดใน polygon ที่ได้มีค่าเท่ากับ 2 × n เสมอ
+00:00 +16: C:/I/Rmutl/project/code/otc10/test/running_zones_phase1_test.dart: เฟส 1: Unit Tests สำหรับระบบโซนวิ่ง (Running Zones) bufferPolyline (สร้างแถบขอบเขตริบบอน) จำนวนจุดใน polygon ที่ได้มีค่าเท่ากับ 2 × n เสมอ
+00:00 +17: C:/I/Rmutl/project/code/otc10/test/running_zones_phase2_test.dart: เฟส 2: Unit Tests ระบบค้นหาและจัดอันดับโซนวิ่งอัตโนมัติ GeoUtils.calculateShoelaceArea — คำนวณพื้นที่ Polygon สี่เหลี่ยมจัตุรัส 100x100 ม. ได้พื้นที่ ≈ 10,000 ตร.ม. (±2%)
+00:00 +18: C:/I/Rmutl/project/code/otc10/test/running_zones_phase1_test.dart: เฟส 1: Unit Tests สำหรับระบบโซนวิ่ง (Running Zones) bufferPolyline (สร้างแถบขอบเขตริบบอน) กรณี path ว่าง คืนค่า empty list
+00:00 +19: C:/I/Rmutl/project/code/otc10/test/running_zones_phase2_test.dart: เฟส 2: Unit Tests ระบบค้นหาและจัดอันดับโซนวิ่งอัตโนมัติ GeoUtils.calculateShoelaceArea — คำนวณพื้นที่ Polygon รูปหลายเหลี่ยมที่มีจุดน้อยกว่า 3 จุด คืนค่า 0.0
+00:00 +20: C:/I/Rmutl/project/code/otc10/test/running_zones_phase1_test.dart: เฟส 1: Unit Tests สำหรับระบบโซนวิ่ง (Running Zones) bufferPolyline (สร้างแถบขอบเขตริบบอน) พิกัดของ buffer ทุกจุดต้องเป็น finite ไม่เป็น NaN หรือ Infinity
+00:00 +21: C:/I/Rmutl/project/code/otc10/test/running_zones_phase2_test.dart: เฟส 2: Unit Tests ระบบค้นหาและจัดอันดับโซนวิ่งอัตโนมัติ GeoUtils.calculatePolygonOverlap — การตัดซ้ำ Polygon รูปสองรูปที่ซ้อนทับกันอย่างมีนัยสำคัญ ได้ overlap >= 0.60
+00:00 +22: C:/I/Rmutl/project/code/otc10/test/running_zones_phase1_test.dart: เฟส 1: Unit Tests สำหรับระบบโซนวิ่ง (Running Zones) RunningZone Serialization (toMap / fromMap round-trip) แปลง toMap() แล้ว fromMap() ได้ข้อมูลครบถ้วนตรงกัน
+00:00 +23: C:/I/Rmutl/project/code/otc10/test/running_zones_phase1_test.dart: เฟส 1: Unit Tests สำหรับระบบโซนวิ่ง (Running Zones) RunningZone Serialization (toMap / fromMap round-trip) แปลง toMap() แล้ว fromMap() ได้ข้อมูลครบถ้วนตรงกัน
+00:00 +24: C:/I/Rmutl/project/code/otc10/test/running_zones_phase2_test.dart: เฟส 2: Unit Tests ระบบค้นหาและจัดอันดับโซนวิ่งอัตโนมัติ ZoneRecommender.generateReasons — การสร้างเหตุผลแนะนำ สร้างเหตุผลแนะนำ 2–3 ข้อตามคุณลักษณะของโซน
+00:00 +25: C:/I/Rmutl/project/code/otc10/test/running_zones_phase1_test.dart: เฟส 1: Unit Tests สำหรับระบบโซนวิ่ง (Running Zones) SafetyScoreEngine — การจัดระดับและสีตามตาราง 3.16 คะแนน >= 70 ระดับ safe สีเขียว 0xFF2ECC71
+00:00 +26: C:/I/Rmutl/project/code/otc10/test/running_zones_phase2_test.dart: เฟส 2: Unit Tests ระบบค้นหาและจัดอันดับโซนวิ่งอัตโนมัติ ZoneRecommender.generateReasons — การสร้างเหตุผลแนะนำ โซนที่ไม่มีข้อมูลเสริมยังมีเหตุผลเริ่มต้นที่เหมาะสม
+00:00 +27: C:/I/Rmutl/project/code/otc10/test/running_zones_phase1_test.dart: เฟส 1: Unit Tests สำหรับระบบโซนวิ่ง (Running Zones) SafetyScoreEngine — การจัดระดับและสีตามตาราง 3.16 คะแนน 40–69 ระดับ caution สีเหลือง 0xFFF39C12
+00:00 +28: C:/I/Rmutl/project/code/otc10/test/running_zones_phase2_test.dart: เฟส 2: Unit Tests ระบบค้นหาและจัดอันดับโซนวิ่งอัตโนมัติ GeoUtils — Geohash-5 Encoding & Neighbors encodeGeohash5 คืนค่าความยาว 5 ตัวอักษรและพิกัดเดียวกันได้ผลลัพธ์เดิม
+00:00 +29: C:/I/Rmutl/project/code/otc10/test/running_zones_phase1_test.dart: เฟส 1: Unit Tests สำหรับระบบโซนวิ่ง (Running Zones) SafetyScoreEngine — การจัดระดับและสีตามตาราง 3.16 คะแนน < 40 ระดับ highRisk สีแดง 0xFFE74C3C
+00:00 +30: C:/I/Rmutl/project/code/otc10/test/running_zones_phase2_test.dart: เฟส 2: Unit Tests ระบบค้นหาและจัดอันดับโซนวิ่งอัตโนมัติ GeoUtils — Geohash-5 Encoding & Neighbors getGeohashNeighbors คืนช่องรอบข้างรวมช่องตัวเองครบ 9 ช่อง
+00:00 +31: C:/I/Rmutl/project/code/otc10/test/running_zones_phase1_test.dart: เฟส 1: Unit Tests สำหรับระบบโซนวิ่ง (Running Zones) PresetZones — โซนเริ่มต้น 13 โซน มีครบ 13 โซนเริ่มต้นและมีขอบเขต polygon ที่ถูกต้อง
+00:00 +32: C:/I/Rmutl/project/code/otc10/test/running_zones_phase3_test.dart: เฟส 3: Unit Tests ความนิยมจากมวลชน (S_pop) และเครื่องมือผู้ดูแล (UC-08) ZonePopularityService.calculatePopScore — คำนวณคะแนนความนิยม S_pop เมื่อ runs_4w = 0 คืนค่า S_pop = 0
+00:00 +33: C:/I/Rmutl/project/code/otc10/test/running_zones_phase3_test.dart: เฟส 3: Unit Tests ความนิยมจากมวลชน (S_pop) และเครื่องมือผู้ดูแล (UC-08) ZonePopularityService.calculatePopScore — คำนวณคะแนนความนิยม S_pop เมื่อ runs_4w = P90 (20 ครั้ง) คืนค่า S_pop = 100 เต็ม
+00:00 +34: C:/I/Rmutl/project/code/otc10/test/running_zones_phase3_test.dart: เฟส 3: Unit Tests ความนิยมจากมวลชน (S_pop) และเครื่องมือผู้ดูแล (UC-08) ZonePopularityService.calculatePopScore — คำนวณคะแนนความนิยม S_pop เมื่อ runs_4w มากกว่า P90 ต้องถูกจำกัดไม่เกิน 100 (clamp)
+00:00 +35: C:/I/Rmutl/project/code/otc10/test/running_zones_phase3_test.dart: เฟส 3: Unit Tests ความนิยมจากมวลชน (S_pop) และเครื่องมือผู้ดูแล (UC-08) ZonePopularityService.calculatePopScore — คำนวณคะแนนความนิยม S_pop การปรับสเกลแบบ Logarithmic ให้คะแนนเติบโตตามสัดส่วน
+00:00 +36: C:/I/Rmutl/project/code/otc10/test/running_zones_phase3_test.dart: เฟส 3: Unit Tests ความนิยมจากมวลชน (S_pop) และเครื่องมือผู้ดูแล (UC-08) ZonePopularityService.isRouteInZone — เกณฑ์ตรวจจับการวิ่งผ่านโซน มีจุดในโซน >= 30% (เช่น 5 จาก 10 จุด = 50%) คืนค่า true
+00:00 +37: C:/I/Rmutl/project/code/otc10/test/running_zones_phase3_test.dart: เฟส 3: Unit Tests ความนิยมจากมวลชน (S_pop) และเครื่องมือผู้ดูแล (UC-08) ZonePopularityService.isRouteInZone — เกณฑ์ตรวจจับการวิ่งผ่านโซน มีจุดในโซน < 30% (เช่น 2 จาก 10 จุด = 20%) คืนค่า false
+00:00 +38: C:/I/Rmutl/project/code/otc10/test/running_zones_phase3_test.dart: เฟส 3: Unit Tests ความนิยมจากมวลชน (S_pop) และเครื่องมือผู้ดูแล (UC-08) ZonePopularityService.isRouteInZone — เกณฑ์ตรวจจับการวิ่งผ่านโซน เส้นทางว่างเปล่า คืนค่า false
+00:00 +39: C:/I/Rmutl/project/code/otc10/test/running_zones_phase3_test.dart: เฟส 3: Unit Tests ความนิยมจากมวลชน (S_pop) และเครื่องมือผู้ดูแล (UC-08) ZonePopularityService — ISO Week Key Formatting getIsoWeekKey ได้รูปแบบมาตรฐาน yyyy-Www
+00:00 +40: C:/I/Rmutl/project/code/otc10/test/running_zones_phase3_test.dart: เฟส 3: Unit Tests ความนิยมจากมวลชน (S_pop) และเครื่องมือผู้ดูแล (UC-08) ZonePopularityService — ISO Week Key Formatting getRecent4WeekKeys คืนค่า 4 สัปดาห์ย้อนหลังครบถ้วน
+00:00 +41: C:/I/Rmutl/project/code/otc10/test/running_zones_phase3_test.dart: เฟส 3: Unit Tests ความนิยมจากมวลชน (S_pop) และเครื่องมือผู้ดูแล (UC-08) ZoneRecommender — Pinned Zone Bonus โซนที่ปักหมุดได้คะแนนแนะนำ R เพิ่ม +10 คะแนน
+00:00 +42: C:/I/Rmutl/project/code/otc10/test/running_zones_phase3_test.dart: เฟส 3: Unit Tests ความนิยมจากมวลชน (S_pop) และเครื่องมือผู้ดูแล (UC-08) ZoneRecommender — Pinned Zone Bonus คะแนน R ของโซนที่ปักหมุดไม่เกิน 100 แม้คะแนนพื้นฐานสูง
+00:00 +43: C:/I/Rmutl/project/code/otc10/test/running_zones_phase3_test.dart: เฟส 3: Unit Tests ความนิยมจากมวลชน (S_pop) และเครื่องมือผู้ดูแล (UC-08) UC-08 E2 — การป้องกันการลบโซนที่มีการใช้งาน เมื่อ runs_4w > 0 กฎกำหนดให้ต้องปฏิเสธการลบ
+00:00 +44: C:/I/Rmutl/project/code/otc10/test/running_zones_phase3_test.dart: เฟส 3: Unit Tests ความนิยมจากมวลชน (S_pop) และเครื่องมือผู้ดูแล (UC-08) UC-08 E2 — การป้องกันการลบโซนที่มีการใช้งาน เมื่อ runs_4w == 0 สามารถลบโซนได้
+00:00 +45: C:/I/Rmutl/project/code/otc10/test/safety_scoring_test.dart: Safety Score Deduction Rules Traffic congestion deduction (<=10% = 0, 10-30% = 5, >30% = 10)
+00:00 +46: C:/I/Rmutl/project/code/otc10/test/safety_scoring_test.dart: Safety Score Deduction Rules Traffic light deduction (0-1 = 0, 2-3 = 5, >=4 = 10)
+00:00 +47: C:/I/Rmutl/project/code/otc10/test/safety_scoring_test.dart: Safety Dijkstra Algorithm with Traffic and Light penalties Calculates path and penalizes congested segments and traffic lights
+00:01 +48: C:/I/Rmutl/project/code/otc10/test/unit_tests_table_4_1_test.dart: ตารางที่ 4.1 การทดสอบระดับหน่วย UT-01 calculateAQI: PM2.5 = 0 → AQI = 0
+00:01 +49: C:/I/Rmutl/project/code/otc10/test/unit_tests_table_4_1_test.dart: ตารางที่ 4.1 การทดสอบระดับหน่วย UT-02 calculateAQI: PM2.5 = 12.0 → AQI = 50
+00:01 +50: C:/I/Rmutl/project/code/otc10/test/unit_tests_table_4_1_test.dart: ตารางที่ 4.1 การทดสอบระดับหน่วย UT-03 calculateAQI: PM2.5 = 35.4 → AQI ≈ 100
+00:01 +51: C:/I/Rmutl/project/code/otc10/test/unit_tests_table_4_1_test.dart: ตารางที่ 4.1 การทดสอบระดับหน่วย UT-04 calculateAQI: PM2.5 = 55.4 → AQI ≈ 150
+00:01 +52: C:/I/Rmutl/project/code/otc10/test/unit_tests_table_4_1_test.dart: ตารางที่ 4.1 การทดสอบระดับหน่วย UT-05 calculateAQI: PM2.5 = -1 → AQI = 0
+00:01 +53: C:/I/Rmutl/project/code/otc10/test/unit_tests_table_4_1_test.dart: ตารางที่ 4.1 การทดสอบระดับหน่วย UT-06 aqiLabel: AQI 50 → "ดี"
+00:01 +54: C:/I/Rmutl/project/code/otc10/test/unit_tests_table_4_1_test.dart: ตารางที่ 4.1 การทดสอบระดับหน่วย UT-07 aqiLabel: AQI 150 → "ไม่ดีสำหรับกลุ่มเสี่ยง"
+00:01 +55: C:/I/Rmutl/project/code/otc10/test/unit_tests_table_4_1_test.dart: ตารางที่ 4.1 การทดสอบระดับหน่วย UT-08 aqiLabel: AQI 300 → "อันตราย"
+00:01 +56: C:/I/Rmutl/project/code/otc10/test/unit_tests_table_4_1_test.dart: ตารางที่ 4.1 การทดสอบระดับหน่วย UT-09 aqiColorValue: AQI 50 → เขียว 0xFF2ECC71
+00:01 +57: C:/I/Rmutl/project/code/otc10/test/unit_tests_table_4_1_test.dart: ตารางที่ 4.1 การทดสอบระดับหน่วย UT-10 aqiColorValue: AQI 201 → ม่วง 0xFF8E44AD
+00:01 +58: C:/I/Rmutl/project/code/otc10/test/unit_tests_table_4_1_test.dart: ตารางที่ 4.1 การทดสอบระดับหน่วย UT-11 getTimedSafetyScore: base 100 → [70, 100]
+00:01 +59: C:/I/Rmutl/project/code/otc10/test/unit_tests_table_4_1_test.dart: ตารางที่ 4.1 การทดสอบระดับหน่วย UT-12 getTimedSafetyScore: base 0 → 0
+00:01 +60: C:/I/Rmutl/project/code/otc10/test/unit_tests_table_4_1_test.dart: ตารางที่ 4.1 การทดสอบระดับหน่วย UT-13 getTimedSafetyScore: base 90 → ≤ 90
+00:01 +61: C:/I/Rmutl/project/code/otc10/test/unit_tests_table_4_1_test.dart: ตารางที่ 4.1 การทดสอบระดับหน่วย UT-14 getTimedSafetyScore: base 100 → ≤ 100
+00:01 +62: C:/I/Rmutl/project/code/otc10/test/unit_tests_table_4_1_test.dart: ตารางที่ 4.1 การทดสอบระดับหน่วย UT-15 shouldWarn: base 30 → true
+00:01 +63: C:/I/Rmutl/project/code/otc10/test/unit_tests_table_4_1_test.dart: ตารางที่ 4.1 การทดสอบระดับหน่วย UT-16 shouldWarn: base 100 → false
+00:01 +64: C:/I/Rmutl/project/code/otc10/test/unit_tests_table_4_1_test.dart: ตารางที่ 4.1 การทดสอบระดับหน่วย UT-17 getDifficultyColor: easy → เขียว
+00:01 +65: C:/I/Rmutl/project/code/otc10/test/unit_tests_table_4_1_test.dart: ตารางที่ 4.1 การทดสอบระดับหน่วย UT-18 getDifficultyColor: hard → แดง
+00:01 +66: C:/I/Rmutl/project/code/otc10/test/unit_tests_table_4_1_test.dart: ตารางที่ 4.1 การทดสอบระดับหน่วย UT-19 getDifficultyColor: unknown → Colors.white
+00:01 +67: C:/I/Rmutl/project/code/otc10/test/widget_test.dart: App basic smoke test
+00:01 +68: C:/I/Rmutl/project/code/otc10/test/widget_test.dart: App basic smoke test
+00:01 +69: C:/I/Rmutl/project/code/otc10/test/widget_test.dart: App basic smoke test
+00:01 +70: C:/I/Rmutl/project/code/otc10/test/widget_test.dart: App basic smoke test
+00:01 +71: C:/I/Rmutl/project/code/otc10/test/widget_test.dart: App basic smoke test
+00:01 +72: C:/I/Rmutl/project/code/otc10/test/widget_test.dart: App basic smoke test
+00:01 +73: C:/I/Rmutl/project/code/otc10/test/widget_test.dart: App basic smoke test
+00:01 +74: C:/I/Rmutl/project/code/otc10/test/widget_test.dart: App basic smoke test
+00:01 +75: C:/I/Rmutl/project/code/otc10/test/widget_test.dart: App basic smoke test
+00:01 +76: C:/I/Rmutl/project/code/otc10/test/widget_test.dart: App basic smoke test
+00:01 +77: C:/I/Rmutl/project/code/otc10/test/widget_test.dart: App basic smoke test
+00:01 +78: C:/I/Rmutl/project/code/otc10/test/widget_test.dart: App basic smoke test
+00:01 +79: C:/I/Rmutl/project/code/otc10/test/widget_test.dart: App basic smoke test
+00:01 +80: C:/I/Rmutl/project/code/otc10/test/widget_test.dart: App basic smoke test
+00:01 +81: C:/I/Rmutl/project/code/otc10/test/widget_test.dart: App basic smoke test
+00:01 +82: C:/I/Rmutl/project/code/otc10/test/widget_test.dart: App basic smoke test
+00:01 +83: C:/I/Rmutl/project/code/otc10/test/widget_test.dart: App basic smoke test
+00:01 +84: All tests passed!

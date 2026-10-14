@@ -139,6 +139,61 @@ class FirestoreService {
     }
   }
 
+  /// แก้ไขกิจกรรมย้อนหลัง: ชื่อ / การมองเห็น / ระยะทาง / เวลา (เพซคำนวณใหม่)
+  /// ไม่แตะ routePoints, startedAt, likes, comments — เส้นทางที่วิ่งไปแล้วคงเดิม
+  /// ครั้งแรกที่แก้สถิติจะเก็บค่าจริงจาก GPS ไว้ใน `originalStats` (คืนค่าได้)
+  Future<void> updateActivityDetails(
+    String uid,
+    String activityId, {
+    required String title,
+    required bool isPublic,
+    required double distanceKm,
+    required int durationSeconds,
+  }) async {
+    final userRef = _userActivitiesRef(uid).doc(activityId);
+    final snap = await userRef.get();
+    if (!snap.exists) {
+      throw Exception(tr('ไม่พบกิจกรรมนี้', 'Activity not found'));
+    }
+    final old = snap.data()!;
+    final pace = distanceKm > 0 ? durationSeconds / distanceKm : 0.0;
+    final oldDist = (old['distanceKm'] as num?)?.toDouble() ?? 0;
+    final oldDur = (old['durationSeconds'] as num?)?.toInt() ?? 0;
+    final statsChanged =
+        (oldDist - distanceKm).abs() > 0.0005 || oldDur != durationSeconds;
+
+    final fields = <String, dynamic>{
+      'title': title.trim(),
+      'isPublic': isPublic,
+      'distanceKm': distanceKm,
+      'durationSeconds': durationSeconds,
+      'avgPaceSecPerKm': pace,
+      'editedAt': FieldValue.serverTimestamp(),
+      if (statsChanged && old['originalStats'] == null)
+        'originalStats': {
+          'distanceKm': oldDist,
+          'durationSeconds': oldDur,
+          'avgPaceSecPerKm': (old['avgPaceSecPerKm'] as num?)?.toDouble() ?? 0,
+        },
+    };
+    await userRef.update(fields);
+
+    // global feed: สาธารณะ → อัปเดต/สร้าง, ส่วนตัว → ลบออกจากฟีด
+    final globalRef = _globalActivitiesRef.doc(activityId);
+    if (isPublic) {
+      final globalSnap = await globalRef.get();
+      if (globalSnap.exists) {
+        // อัปเดตเฉพาะ field ที่แก้ (ไม่ทับ likes/comments ในฟีด)
+        await globalRef.update(fields);
+      } else {
+        final fresh = await userRef.get();
+        await globalRef.set({...fresh.data()!, 'userActivityId': activityId});
+      }
+    } else if (old['isPublic'] == true) {
+      await globalRef.delete();
+    }
+  }
+
   /// Toggle Like — อัปเดต likedBy/likesCount ใน global collection (public)
   /// หรือ user subcollection (private)
   Future<void> toggleLike(

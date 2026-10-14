@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:geolocator/geolocator.dart';
@@ -16,6 +17,8 @@ import '../services/firestore_service.dart';
 import '../services/safety_service.dart';
 import '../services/emergency_contact_service.dart';
 import '../services/location_helper.dart';
+import '../services/off_route_monitor.dart';
+import '../services/push_service.dart';
 import '../providers/language_provider.dart';
 import '../l10n/app_strings.dart';
 import '../l10n/tr.dart';
@@ -116,6 +119,11 @@ class _RecordScreenState extends State<RecordScreen>
   // ─── Active Route & Zone (dismissable) ──────────────────────
   RunningRoute? _activeRoute;
   RunningZone? _activeZone;
+
+  // ─── แจ้งเตือนออกนอกเส้นทาง (เส้นทางยอดนิยม / วางแผนเส้นทาง / วงรอบในโซน) ──
+  OffRouteMonitor? _offRoute;
+  bool _offRouteMuted = false;
+  static const String _offRouteTag = 'off_route';
 
   @override
   void initState() {
@@ -250,6 +258,7 @@ class _RecordScreenState extends State<RecordScreen>
     _noMovementTimer?.cancel();
     _previewSub?.cancel();
     _mapController.dispose();
+    if (_offRoute != null) PushService.cancelSystemNotification(_offRouteTag);
     super.dispose();
   }
 
@@ -299,6 +308,9 @@ class _RecordScreenState extends State<RecordScreen>
       _lastPosition = null;
       _lastAltitude = null;
       _routePoints.clear();
+      _offRouteMuted = false;
+      final planned = _plannedPath;
+      _offRoute = planned.length >= 2 ? OffRouteMonitor(planned) : null;
     });
 
     _stopPreviewGps();
@@ -478,6 +490,8 @@ class _RecordScreenState extends State<RecordScreen>
                 }
               }
             }
+            // ─── Off-route check ────────────────────────
+            _checkOffRoute(pos);
           },
           onError: (_) {
             // GPS error — ยังวิ่งต่อได้
@@ -512,6 +526,7 @@ class _RecordScreenState extends State<RecordScreen>
       _isPaused = false;
       _lastPosition = null; // reset lastPosition เพื่อไม่ให้คำนวณ segment ข้ามช่วง pause
     });
+    _offRoute?.resetStreak();
     _startTimer();
     // GPS stream ยังรันอยู่แล้ว — ไม่ต้อง _startLocationTracking() ใหม่
     // (เริ่มใหม่เฉพาะกรณีที่ stream ถูก cancel ไปก่อนหน้า)
@@ -546,6 +561,8 @@ class _RecordScreenState extends State<RecordScreen>
       _paceWindow.clear();
       _lastPosition = null;
       _routePoints.clear();
+      if (_offRoute != null) PushService.cancelSystemNotification(_offRouteTag);
+      _offRoute = null;
     });
 
     if (secs < 10) return; // ไม่บันทึกถ้าวิ่งน้อยกว่า 10 วินาที
@@ -560,6 +577,80 @@ class _RecordScreenState extends State<RecordScreen>
         routePoints: savedRoute,
       );
     }
+  }
+
+  // ─── Off-route alerts ────────────────────────────────────
+
+  void _checkOffRoute(Position pos) {
+    final m = _offRoute;
+    if (m == null || _activeRoute == null || !_isRunning || _isPaused) return;
+    final ev = m.update(LatLng(pos.latitude, pos.longitude), accuracyM: pos.accuracy);
+    switch (ev) {
+      case OffRouteEvent.joined:
+        HapticFeedback.mediumImpact();
+        _showSnack(tr('เข้าสู่เส้นทางแล้ว — ระบบจะเตือนเมื่อคุณออกนอกเส้นทาง',
+            'You are on the route — you will be alerted if you go off it'));
+        break;
+      case OffRouteEvent.wentOff:
+      case OffRouteEvent.stillOff:
+        if (!_offRouteMuted) _alertOffRoute(pos, repeat: ev == OffRouteEvent.stillOff);
+        break;
+      case OffRouteEvent.backOn:
+        HapticFeedback.mediumImpact();
+        PushService.cancelSystemNotification(_offRouteTag);
+        _showSnack(tr('✅ กลับเข้าเส้นทางแล้ว', '✅ Back on route'));
+        break;
+      case OffRouteEvent.none:
+        break;
+    }
+    if (ev != OffRouteEvent.none && mounted) setState(() {});
+  }
+
+  /// ข้อความบอกทางกลับเข้าเส้นทาง เช่น "ทางขวา (ทิศตะวันออก)"
+  String _wayBackText(Position? pos) {
+    final m = _offRoute;
+    final target = m?.nearestPoint;
+    if (pos == null || target == null) return '';
+    final brg = OffRouteMonitor.bearing(LatLng(pos.latitude, pos.longitude), target);
+    const th = ['เหนือ', 'ตะวันออกเฉียงเหนือ', 'ตะวันออก', 'ตะวันออกเฉียงใต้',
+        'ใต้', 'ตะวันตกเฉียงใต้', 'ตะวันตก', 'ตะวันตกเฉียงเหนือ'];
+    const en = ['north', 'north-east', 'east', 'south-east',
+        'south', 'south-west', 'west', 'north-west'];
+    final i = ((brg + 22.5) % 360 ~/ 45).toInt();
+    final compass = tr('ทิศ${th[i]}', en[i]);
+    // มีทิศการเคลื่อนที่ (กำลังวิ่ง) → บอกซ้าย/ขวาเทียบกับทิศที่วิ่งอยู่
+    if (pos.speed > 1.0 && pos.heading.isFinite && pos.heading >= 0) {
+      final diff = ((brg - pos.heading + 540) % 360) - 180;
+      final String rel;
+      if (diff.abs() <= 30) {
+        rel = tr('ตรงไปข้างหน้า', 'straight ahead');
+      } else if (diff.abs() >= 150) {
+        rel = tr('หันกลับหลัง', 'turn around');
+      } else if (diff > 0) {
+        rel = tr('ไปทางขวา', 'to your right');
+      } else {
+        rel = tr('ไปทางซ้าย', 'to your left');
+      }
+      return '$rel ($compass)';
+    }
+    return tr('ไปทาง$compass', 'head $compass');
+  }
+
+  void _alertOffRoute(Position pos, {required bool repeat}) {
+    final dist = (_offRoute?.distanceM ?? 0).round();
+    final way = _wayBackText(pos);
+    // สั่น 2 ครั้ง
+    HapticFeedback.vibrate();
+    Future.delayed(const Duration(milliseconds: 350), HapticFeedback.vibrate);
+    // แจ้งเตือนบนแถบแจ้งเตือน (มีเสียง และเห็นได้แม้ล็อกหน้าจอ/ใส่มือถือในกระเป๋า)
+    PushService.showSystemNotification(
+      tag: _offRouteTag,
+      title: repeat
+          ? tr('⚠️ ยังอยู่นอกเส้นทาง', '⚠️ Still off route')
+          : tr('⚠️ คุณออกนอกเส้นทางแล้ว', '⚠️ You are off route'),
+      body: tr('ห่างจากเส้นทาง $dist ม. — กลับเข้าเส้นทาง$way',
+          '$dist m from the route — get back $way'),
+    );
   }
 
   // ─── Summary Dialog ──────────────────────────────────────
@@ -1626,6 +1717,75 @@ class _RecordScreenState extends State<RecordScreen>
     );
   }
 
+  // ─── Off-route banner ────────────────────────────────────
+
+  Widget _buildOffRouteBanner() {
+    final m = _offRoute!;
+    final dist = m.distanceM;
+    if (m.state == RouteFollowState.onRoute || dist == null) {
+      return const SizedBox.shrink();
+    }
+    final isOff = m.state == RouteFollowState.offRoute;
+    final color = isOff ? const Color(0xFFE53935) : const Color(0xFF1E88E5);
+    final title = isOff
+        ? tr('ออกนอกเส้นทาง ${dist.round()} ม.', 'Off route by ${dist.round()} m')
+        : tr('กำลังไปยังเส้นทาง · อีก ${dist.round()} ม.',
+            'Heading to the route · ${dist.round()} m away');
+    final sub = isOff
+        ? tr('กลับเข้าเส้นทาง${_wayBackText(_gpsFix)}', 'Get back ${_wayBackText(_gpsFix)}')
+        : tr('เริ่มเตือนเมื่อคุณเข้าสู่เส้นทางแล้ว', 'Alerts start once you reach the route');
+    return Container(
+      margin: const EdgeInsets.fromLTRB(10, 8, 10, 0),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [BoxShadow(color: color.withValues(alpha: 0.35), blurRadius: 10)],
+      ),
+      child: Row(children: [
+        Icon(isOff ? Icons.wrong_location_rounded : Icons.near_me_rounded,
+            color: Colors.white, size: 20),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(title,
+                  style: const TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.w800, fontSize: 14)),
+              Text(sub,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: Colors.white, fontSize: 12)),
+            ],
+          ),
+        ),
+        if (isOff)
+          GestureDetector(
+            onTap: () {
+              setState(() => _offRouteMuted = !_offRouteMuted);
+              if (_offRouteMuted) PushService.cancelSystemNotification(_offRouteTag);
+            },
+            child: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                _offRouteMuted
+                    ? Icons.notifications_off_rounded
+                    : Icons.notifications_active_rounded,
+                color: Colors.white,
+                size: 16,
+              ),
+            ),
+          ),
+      ]),
+    );
+  }
+
   // ─── Live Map (แผนที่ระหว่างวิ่ง) ─────────────────────────
   static const LatLng _defaultCenter = LatLng(18.7883, 98.9853);
 
@@ -1812,6 +1972,18 @@ class _RecordScreenState extends State<RecordScreen>
                         strokeWidth: 5,
                       ),
                     ]),
+                  // เส้นประชี้ทางกลับเข้าเส้นทาง (เมื่อออกนอกเส้นทาง)
+                  if (me != null &&
+                      _offRoute?.state == RouteFollowState.offRoute &&
+                      _offRoute?.nearestPoint != null)
+                    PolylineLayer(polylines: [
+                      Polyline(
+                        points: [me, _offRoute!.nearestPoint!],
+                        color: const Color(0xFFE53935),
+                        strokeWidth: 4,
+                        pattern: StrokePattern.dashed(segments: const [10, 8]),
+                      ),
+                    ]),
                   // วงความแม่นยำ GPS รอบจุดตำแหน่งปัจจุบัน
                   if (me != null && _gpsFix != null && _gpsFix!.accuracy > 0 && _gpsFix!.accuracy < 150)
                     CircleLayer(circles: [
@@ -1897,7 +2069,13 @@ class _RecordScreenState extends State<RecordScreen>
                       const SizedBox(width: 8),
                       // ✕ ปุ่ม dismiss route
                       GestureDetector(
-                        onTap: () => setState(() => _activeRoute = null),
+                        onTap: () {
+                          if (_offRoute != null) PushService.cancelSystemNotification(_offRouteTag);
+                          setState(() {
+                            _activeRoute = null;
+                            _offRoute = null;
+                          });
+                        },
                         child: Container(
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
@@ -1909,6 +2087,10 @@ class _RecordScreenState extends State<RecordScreen>
                       ),
                     ]),
                   ),
+
+                // ─── Off-route / approaching banner ─────
+                if (_offRoute != null && _activeRoute != null && _isRunning)
+                  _buildOffRouteBanner(),
 
                 // ─── Zone Banner ───────────────────────
                 if (_activeZone != null)

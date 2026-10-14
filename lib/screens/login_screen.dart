@@ -1,8 +1,10 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
+import '../utils/password_policy.dart';
 import '../l10n/tr.dart';
 import 'package:provider/provider.dart';
 import '../providers/language_provider.dart';
@@ -25,6 +27,7 @@ class _LoginScreenState extends State<LoginScreen>
   int _tabIndex = 0;
   bool _isLoading = false;
   String? _prefilledEmail;
+  DateTime? _lastResetEmailAt; // กันกด "ลืมรหัสผ่าน" ถี่ ๆ
 
   // ─── Animation Controllers ────────────────────────────────────────────────
   late AnimationController _bgController;
@@ -129,14 +132,25 @@ class _LoginScreenState extends State<LoginScreen>
     setState(() => _isLoading = true);
     try {
       await _authService.signInWithEmailAndPassword(email, password);
+    } on LoginLockedException catch (e) {
+      if (mounted) _showLockedSnack(e.remaining);
+    } on EmailNotVerifiedException catch (e) {
+      if (mounted) await _showVerifyEmailDialog(e.email, password, resent: e.resent);
     } on FirebaseAuthException catch (e) {
       if (!mounted) return;
-      // E1: กรอกอีเมลหรือรหัสผ่านไม่ถูกต้อง
+      // E1: กรอกอีเมลหรือรหัสผ่านไม่ถูกต้อง (ไม่บอกว่าผิดช่องไหน กันการเดาบัญชี)
       if (e.code == 'user-not-found' ||
           e.code == 'wrong-password' ||
           e.code == 'invalid-credential' ||
           e.code == 'invalid-email') {
         _showSnack(tr('กรอกอีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณากรอกใหม่', 'Incorrect email or password. Please try again'), isError: true);
+      } else if (e.code == 'too-many-requests') {
+        _showSnack(tr('มีการพยายามเข้าสู่ระบบหลายครั้งเกินไป ระบบระงับชั่วคราว กรุณาลองใหม่ภายหลัง หรือรีเซ็ตรหัสผ่าน',
+            'Too many attempts. Access is temporarily blocked. Try again later or reset your password'), isError: true);
+      } else if (e.code == 'user-disabled') {
+        _showSnack(tr('บัญชีนี้ถูกระงับการใช้งาน', 'This account has been disabled'), isError: true);
+      } else if (e.code == 'network-request-failed') {
+        _showSnack(tr('เชื่อมต่ออินเทอร์เน็ตไม่ได้ กรุณาตรวจสอบเครือข่าย', 'No internet connection. Please check your network'), isError: true);
       } else {
         _showSnack(tr('เข้าสู่ระบบไม่สำเร็จ กรุณาลองอีกครั้ง', 'Sign-in failed. Please try again'), isError: true);
       }
@@ -145,6 +159,83 @@ class _LoginScreenState extends State<LoginScreen>
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  void _showLockedSnack(Duration remaining) {
+    final secs = remaining.inSeconds + 1;
+    final text = secs >= 60
+        ? tr('${(secs / 60).ceil()} นาที', '${(secs / 60).ceil()} min')
+        : tr('$secs วินาที', '$secs s');
+    _showSnack(
+      tr('กรอกรหัสผ่านผิดหลายครั้ง เพื่อความปลอดภัยกรุณารอ $text แล้วลองใหม่ หรือกด "ลืมรหัสผ่าน?"',
+          'Too many wrong passwords. For your security, wait $text and try again, or tap "Forgot password?"'),
+      isError: true,
+    );
+  }
+
+  /// ยังไม่ได้ยืนยันอีเมล — แจ้งให้เปิดลิงก์ในอีเมล และให้ส่งลิงก์ใหม่ได้
+  Future<void> _showVerifyEmailDialog(String email, String password,
+      {required bool resent}) async {
+    final pal = context.pal;
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) {
+        var sending = false;
+        return StatefulBuilder(
+          builder: (ctx, setD) => AlertDialog(
+            backgroundColor: pal.surface,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: Row(children: [
+              const Icon(Icons.mark_email_unread_outlined, color: Color(0xFFFC4C02)),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(tr('กรุณายืนยันอีเมล', 'Verify your email'),
+                    style: TextStyle(color: pal.text, fontWeight: FontWeight.w800)),
+              ),
+            ]),
+            content: Text(
+              resent
+                  ? tr('เราส่งลิงก์ยืนยันไปที่ $email แล้ว\nกดลิงก์ในอีเมล (ดูในกล่องจดหมายขยะด้วย) แล้วกลับมาเข้าสู่ระบบอีกครั้ง',
+                      'We sent a verification link to $email.\nOpen the link (check your spam folder too), then sign in again.')
+                  : tr('บัญชี $email ยังไม่ได้ยืนยันอีเมล\nกดลิงก์ที่เราส่งไปก่อนหน้า แล้วกลับมาเข้าสู่ระบบอีกครั้ง',
+                      'The account $email is not verified yet.\nOpen the link we sent earlier, then sign in again.'),
+              style: TextStyle(color: pal.textSub, height: 1.5),
+            ),
+            actions: [
+              TextButton(
+                onPressed: sending
+                    ? null
+                    : () async {
+                        setD(() => sending = true);
+                        try {
+                          await _authService.resendVerificationEmail(email, password);
+                          if (ctx.mounted) Navigator.pop(ctx);
+                          if (mounted) {
+                            _showSnack(tr('ส่งลิงก์ยืนยันใหม่ไปที่ $email แล้ว', 'A new verification link was sent to $email'), isError: false);
+                          }
+                        } catch (_) {
+                          if (ctx.mounted) Navigator.pop(ctx);
+                          if (mounted) {
+                            _showSnack(tr('ส่งอีเมลไม่สำเร็จ (ส่งถี่เกินไป) กรุณารอสักครู่แล้วลองใหม่', 'Could not send (too many requests). Please wait and try again'), isError: true);
+                          }
+                        }
+                      },
+                child: Text(tr('ส่งลิงก์อีกครั้ง', 'Resend link'),
+                    style: const TextStyle(color: Color(0xFFFC4C02))),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(ctx),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFFC4C02),
+                  foregroundColor: Colors.white,
+                ),
+                child: Text(tr('ตกลง', 'OK')),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _handleRegister(
@@ -159,7 +250,8 @@ class _LoginScreenState extends State<LoginScreen>
       // สลับกลับมาหน้าจอเข้าสู่ระบบ
       _switchTab(0);
       _showSnack(
-        tr('สมัครสมาชิกสำเร็จ! กรุณาเข้าสู่ระบบเพื่อเริ่มใช้งาน', 'Registration successful! Please sign in to get started'),
+        tr('สมัครสมาชิกสำเร็จ! เราส่งลิงก์ยืนยันไปที่ ${email.trim()} แล้ว กรุณากดยืนยันก่อนเข้าสู่ระบบ',
+            'Registration successful! We sent a verification link to ${email.trim()}. Please verify before signing in'),
         isError: false,
       );
     } on FirebaseAuthException catch (e) {
@@ -167,8 +259,11 @@ class _LoginScreenState extends State<LoginScreen>
       if (e.code == 'email-already-in-use') {
         // E2: อีเมลนี้ถูกใช้งานแล้ว
         _showSnack(tr('อีเมลนี้ถูกใช้งานแล้ว', 'This email is already in use'), isError: true);
-      } else if (e.code == 'weak-password') {
-        _showSnack(tr('รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร', 'Password must be at least 6 characters'), isError: true);
+      } else if (e.code == 'weak-password' ||
+          e.code == 'password-does-not-meet-requirements') {
+        _showSnack(tr('รหัสผ่านไม่ปลอดภัยพอ กรุณาตั้งตามเงื่อนไขที่แสดง', 'Password is not strong enough. Please follow the requirements shown'), isError: true);
+      } else if (e.code == 'too-many-requests') {
+        _showSnack(tr('มีการสมัครจากเครื่องนี้ถี่เกินไป กรุณารอสักครู่', 'Too many sign-ups from this device. Please wait a moment'), isError: true);
       } else if (e.code == 'invalid-email') {
         _showSnack(tr('รูปแบบอีเมลไม่ถูกต้อง', 'Invalid email format'), isError: true);
       } else {
@@ -182,23 +277,39 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   // Alternative Flow A1: ลืมรหัสผ่าน
+  // แจ้งผลแบบเดียวกันเสมอไม่ว่ามีบัญชีหรือไม่ (กันการใช้หน้านี้ตรวจว่าอีเมลไหนมีบัญชี)
   Future<void> _handleForgotPassword(String email) async {
-    if (email.trim().isEmpty) {
+    final e = email.trim();
+    if (e.isEmpty) {
       _showSnack(tr('กรุณากรอกอีเมลก่อนกด "ลืมรหัสผ่าน"', 'Please enter your email before tapping "Forgot password"'), isError: true);
       return;
     }
+    if (!isValidEmail(e)) {
+      _showSnack(tr('รูปแบบอีเมลไม่ถูกต้อง', 'Invalid email format'), isError: true);
+      return;
+    }
+    final last = _lastResetEmailAt;
+    if (last != null && DateTime.now().difference(last) < const Duration(seconds: 60)) {
+      final wait = 60 - DateTime.now().difference(last).inSeconds;
+      _showSnack(tr('เพิ่งส่งลิงก์ไปแล้ว กรุณารอ $wait วินาทีก่อนส่งใหม่', 'Link just sent. Please wait $wait s before sending again'), isError: true);
+      return;
+    }
+    _lastResetEmailAt = DateTime.now();
     try {
-      await _authService.sendPasswordResetEmail(email);
-      if (mounted) {
-        _showSnack(tr('ส่งลิงก์รีเซ็ตรหัสผ่านไปยัง $email แล้ว', 'Password reset link sent to $email'), isError: false);
+      await _authService.sendPasswordResetEmail(e);
+    } on FirebaseAuthException catch (err) {
+      if (err.code == 'network-request-failed' || err.code == 'too-many-requests') {
+        _lastResetEmailAt = null;
+        if (mounted) {
+          _showSnack(tr('ส่งอีเมลไม่สำเร็จ กรุณาลองอีกครั้ง', 'Could not send email. Please try again'), isError: true);
+        }
+        return;
       }
-    } on FirebaseAuthException catch (e) {
-      if (!mounted) return;
-      if (e.code == 'user-not-found' || e.code == 'invalid-email') {
-        _showSnack(tr('ไม่พบอีเมลนี้ในระบบ', 'No account found with this email'), isError: true);
-      } else {
-        _showSnack(tr('ส่งอีเมลไม่สำเร็จ กรุณาลองอีกครั้ง', 'Could not send email. Please try again'), isError: true);
-      }
+      // user-not-found ฯลฯ → แสดงข้อความเดียวกับสำเร็จ
+    } catch (_) {}
+    if (mounted) {
+      _showSnack(tr('ถ้ามีบัญชีที่ใช้อีเมล $e ระบบจะส่งลิงก์รีเซ็ตรหัสผ่านไปให้ภายในไม่กี่นาที',
+          'If an account exists for $e, a password reset link will arrive in a few minutes'), isError: false);
     }
   }
 
@@ -619,7 +730,7 @@ class _LoginFormState extends State<_LoginForm> {
 
   void _submit() {
     if (_formKey.currentState!.validate()) {
-      widget.onLogin(_emailCtrl.text, _passCtrl.text);
+      widget.onLogin(_emailCtrl.text.trim().toLowerCase(), _passCtrl.text);
     }
   }
 
@@ -637,13 +748,9 @@ class _LoginFormState extends State<_LoginForm> {
             hint: 'example@email.com',
             icon: Icons.email_outlined,
             keyboardType: TextInputType.emailAddress,
-            validator: (v) {
-              if (v == null || v.trim().isEmpty) return tr('กรุณากรอกอีเมล', 'Please enter your email');
-              if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(v.trim())) {
-                return tr('รูปแบบอีเมลไม่ถูกต้อง', 'Invalid email format');
-              }
-              return null;
-            },
+            maxLength: 254,
+            autofillHints: const [AutofillHints.email],
+            validator: _validateEmail,
           ),
           const SizedBox(height: 16),
 
@@ -664,6 +771,9 @@ class _LoginFormState extends State<_LoginForm> {
               ),
               onPressed: () => setState(() => _obscurePass = !_obscurePass),
             ),
+            maxLength: PasswordPolicy.maxLength,
+            autofillHints: const [AutofillHints.password],
+            onSubmitted: (_) => _submit(),
             validator: (v) {
               if (v == null || v.isEmpty) return tr('กรุณากรอกรหัสผ่าน', 'Please enter your password');
               return null;
@@ -751,7 +861,7 @@ class _RegisterFormState extends State<_RegisterForm> {
 
   void _submit() {
     if (_formKey.currentState!.validate()) {
-      widget.onRegister(_nameCtrl.text, _emailCtrl.text, _passCtrl.text);
+      widget.onRegister(_nameCtrl.text.trim(), _emailCtrl.text.trim().toLowerCase(), _passCtrl.text);
     }
   }
 
@@ -768,9 +878,15 @@ class _RegisterFormState extends State<_RegisterForm> {
             label: tr('ชื่อผู้ใช้', 'Username'),
             hint: tr('ชื่อที่แสดงในแอป', 'Display name in the app'),
             icon: Icons.person_outline_rounded,
+            maxLength: 30,
+            autofillHints: const [AutofillHints.name],
             validator: (v) {
               if (v == null || v.trim().isEmpty) return tr('กรุณากรอกชื่อผู้ใช้', 'Please enter a username');
               if (v.trim().length < 2) return tr('ชื่อต้องมีอย่างน้อย 2 ตัวอักษร', 'Name must be at least 2 characters');
+              if (v.trim().length > 30) return tr('ชื่อยาวได้ไม่เกิน 30 ตัวอักษร', 'Name must be at most 30 characters');
+              if (RegExp(r'[<>{}\\/"`\u0000-\u001F]').hasMatch(v)) {
+                return tr('ชื่อมีอักขระที่ไม่อนุญาต (< > { } / \\ " `)', 'Name contains characters that are not allowed (< > { } / \\ " `)');
+              }
               return null;
             },
           ),
@@ -783,13 +899,9 @@ class _RegisterFormState extends State<_RegisterForm> {
             hint: 'example@email.com',
             icon: Icons.email_outlined,
             keyboardType: TextInputType.emailAddress,
-            validator: (v) {
-              if (v == null || v.trim().isEmpty) return tr('กรุณากรอกอีเมล', 'Please enter your email');
-              if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(v.trim())) {
-                return tr('รูปแบบอีเมลไม่ถูกต้อง', 'Invalid email format');
-              }
-              return null;
-            },
+            maxLength: 254,
+            autofillHints: const [AutofillHints.email],
+            validator: _validateEmail,
           ),
           const SizedBox(height: 16),
 
@@ -797,7 +909,7 @@ class _RegisterFormState extends State<_RegisterForm> {
           _AuthField(
             controller: _passCtrl,
             label: tr('รหัสผ่าน', 'Password'),
-            hint: tr('อย่างน้อย 6 ตัวอักษร', 'At least 6 characters'),
+            hint: tr('อย่างน้อย 8 ตัว มี A-z 0-9 และสัญลักษณ์', '8+ chars with A-z, 0-9 and a symbol'),
             icon: Icons.lock_outline_rounded,
             obscureText: _obscurePass,
             suffixIcon: IconButton(
@@ -810,12 +922,14 @@ class _RegisterFormState extends State<_RegisterForm> {
               ),
               onPressed: () => setState(() => _obscurePass = !_obscurePass),
             ),
-            validator: (v) {
-              if (v == null || v.isEmpty) return tr('กรุณากรอกรหัสผ่าน', 'Please enter your password');
-              if (v.length < 6) return tr('รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร', 'Password must be at least 6 characters');
-              return null;
-            },
+            maxLength: PasswordPolicy.maxLength,
+            autofillHints: const [AutofillHints.newPassword],
+            onChanged: (_) => setState(() {}),
+            validator: (v) => PasswordPolicy.validate(v,
+                email: _emailCtrl.text, name: _nameCtrl.text),
           ),
+          const SizedBox(height: 10),
+          _PasswordStrength(password: _passCtrl.text),
           const SizedBox(height: 16),
 
           // Confirm Password Field
@@ -836,6 +950,8 @@ class _RegisterFormState extends State<_RegisterForm> {
               onPressed: () =>
                   setState(() => _obscureConfirm = !_obscureConfirm),
             ),
+            maxLength: PasswordPolicy.maxLength,
+            autofillHints: const [AutofillHints.newPassword],
             validator: (v) {
               if (v == null || v.isEmpty) return tr('กรุณายืนยันรหัสผ่าน', 'Please confirm your password');
               if (v != _passCtrl.text) return tr('รหัสผ่านไม่ตรงกัน', 'Passwords do not match');
@@ -910,6 +1026,10 @@ class _AuthField extends StatelessWidget {
   final Widget? suffixIcon;
   final TextInputType? keyboardType;
   final String? Function(String?)? validator;
+  final int? maxLength;
+  final Iterable<String>? autofillHints;
+  final ValueChanged<String>? onChanged;
+  final ValueChanged<String>? onSubmitted;
 
   const _AuthField({
     required this.controller,
@@ -920,6 +1040,10 @@ class _AuthField extends StatelessWidget {
     this.suffixIcon,
     this.keyboardType,
     this.validator,
+    this.maxLength,
+    this.autofillHints,
+    this.onChanged,
+    this.onSubmitted,
   });
 
   @override
@@ -940,6 +1064,17 @@ class _AuthField extends StatelessWidget {
           obscureText: obscureText,
           keyboardType: keyboardType,
           validator: validator,
+          autofillHints: autofillHints,
+          onChanged: onChanged,
+          onFieldSubmitted: onSubmitted,
+          // ช่องรหัสผ่าน: ไม่ให้คีย์บอร์ดจำ/แนะนำคำ
+          autocorrect: !obscureText && keyboardType != TextInputType.emailAddress,
+          enableSuggestions: !obscureText,
+          inputFormatters: [
+            if (maxLength != null) LengthLimitingTextInputFormatter(maxLength),
+            if (obscureText || keyboardType == TextInputType.emailAddress)
+              FilteringTextInputFormatter.deny(RegExp(r'\s')),
+          ],
           style: GoogleFonts.inter(
               color: pal.text, fontSize: 14, fontWeight: FontWeight.w500),
           decoration: InputDecoration(
@@ -1255,4 +1390,91 @@ class _OrbitRingPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_OrbitRingPainter o) => o.angle != angle;
+}
+
+// ─── Email validation ─────────────────────────────────────────────────────────
+
+/// รูปแบบอีเมลมาตรฐาน (ส่วนหน้า@โดเมน.นามสกุล ≥ 2 ตัว) ยาวไม่เกิน 254 ตัว
+bool isValidEmail(String email) {
+  final e = email.trim();
+  if (e.isEmpty || e.length > 254) return false;
+  return RegExp(r"^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*\.[A-Za-z]{2,}$")
+      .hasMatch(e);
+}
+
+String? _validateEmail(String? v) {
+  if (v == null || v.trim().isEmpty) return tr('กรุณากรอกอีเมล', 'Please enter your email');
+  if (!isValidEmail(v)) return tr('รูปแบบอีเมลไม่ถูกต้อง', 'Invalid email format');
+  return null;
+}
+
+// ─── Password strength meter + checklist ──────────────────────────────────────
+
+class _PasswordStrength extends StatelessWidget {
+  final String password;
+  const _PasswordStrength({required this.password});
+
+  @override
+  Widget build(BuildContext context) {
+    final pal = context.pal;
+    final level = PasswordPolicy.strength(password);
+    const colors = [
+      Color(0xFFE53935), Color(0xFFE53935), Color(0xFFF39C12),
+      Color(0xFF2ECC71), Color(0xFF1A9950),
+    ];
+    final labels = [
+      tr('ยังไม่ได้กรอก', 'Empty'),
+      tr('อ่อนมาก', 'Very weak'),
+      tr('พอใช้', 'Fair'),
+      tr('แข็งแรง', 'Strong'),
+      tr('แข็งแรงมาก', 'Very strong'),
+    ];
+    final rules = <(bool, String)>[
+      (PasswordPolicy.hasLength(password), tr('8–64 ตัวอักษร', '8–64 characters')),
+      (PasswordPolicy.hasUpper(password) && PasswordPolicy.hasLower(password),
+          tr('ตัวพิมพ์ใหญ่และเล็ก', 'Upper & lowercase')),
+      (PasswordPolicy.hasDigit(password), tr('ตัวเลข', 'A number')),
+      (PasswordPolicy.hasSpecial(password), tr('สัญลักษณ์ เช่น ! @ #', 'A symbol, e.g. ! @ #')),
+    ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(children: [
+          for (int i = 1; i <= 4; i++)
+            Expanded(
+              child: Container(
+                height: 5,
+                margin: EdgeInsets.only(right: i < 4 ? 4 : 0),
+                decoration: BoxDecoration(
+                  color: level >= i ? colors[level] : pal.border,
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              ),
+            ),
+          const SizedBox(width: 10),
+          Text(labels[level],
+              style: GoogleFonts.inter(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: level == 0 ? pal.textMute : colors[level])),
+        ]),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 12,
+          runSpacing: 4,
+          children: [
+            for (final r in rules)
+              Row(mainAxisSize: MainAxisSize.min, children: [
+                Icon(r.$1 ? Icons.check_circle_rounded : Icons.radio_button_unchecked,
+                    size: 14, color: r.$1 ? const Color(0xFF2ECC71) : pal.textMute),
+                const SizedBox(width: 4),
+                Text(r.$2,
+                    style: GoogleFonts.inter(
+                        fontSize: 11, color: r.$1 ? pal.textSub : pal.textMute)),
+              ]),
+          ],
+        ),
+      ],
+    );
+  }
 }

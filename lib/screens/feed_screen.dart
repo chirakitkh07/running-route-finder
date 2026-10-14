@@ -16,6 +16,7 @@ import '../models/app_notification.dart';
 import '../services/firestore_service.dart';
 import '../services/safety_score_engine.dart';
 import '../services/air_quality_service.dart';
+import '../widgets/activity_edit_sheet.dart';
 import 'package:provider/provider.dart';
 import '../providers/language_provider.dart';
 import '../providers/notification_provider.dart';
@@ -1745,7 +1746,9 @@ class _FeedScreenState extends State<FeedScreen> {
                             color: Theme.of(context).colorScheme.onSurface),
                       ),
                       Text(
-                        a.formattedDate,
+                        a.isEdited
+                            ? '${a.formattedDate} · ${tr('แก้ไขแล้ว', 'Edited')}'
+                            : a.formattedDate,
                         style: TextStyle(fontSize: 11, color: pal.textMute),
                       ),
                     ],
@@ -1768,6 +1771,10 @@ class _FeedScreenState extends State<FeedScreen> {
                           size: 14, color: Color(0xFFFC4C02)),
                     ),
                   ),
+                if (isOwner && a.id != null) ...[
+                  const SizedBox(width: 6),
+                  _editActivityButton(a, const Color(0xFFFC4C02)),
+                ],
               ],
             ),
           ),
@@ -1865,6 +1872,25 @@ class _FeedScreenState extends State<FeedScreen> {
 
   // --- Activity Card (My Activities) ---
 
+  /// ปุ่มแก้ไขกิจกรรมของตัวเอง (ชื่อ / การมองเห็น / ระยะทาง / เวลา)
+  Widget _editActivityButton(Activity a, Color color) {
+    return Tooltip(
+      message: tr('แก้ไขกิจกรรม', 'Edit activity'),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: () => showActivityEditSheet(context, a),
+        child: Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(Icons.edit_rounded, size: 14, color: color),
+        ),
+      ),
+    );
+  }
+
   Widget _buildActivityCard(Activity a,
       {String? ownerUid, FirestoreService? svc}) {
     final s = AppStrings(isThai: context.read<LanguageProvider>().isThai);
@@ -1915,7 +1941,10 @@ class _FeedScreenState extends State<FeedScreen> {
                                       fontSize: 15,
                                       color: Theme.of(context).colorScheme.onSurface)),
                               const SizedBox(height: 3),
-                              Text(a.formattedDate,
+                              Text(
+                                  a.isEdited
+                                      ? '${a.formattedDate} · ${tr('แก้ไขแล้ว', 'Edited')}'
+                                      : a.formattedDate,
                                   style: TextStyle(
                                       fontSize: 11, color: pal.textMute)),
                             ],
@@ -1958,6 +1987,10 @@ class _FeedScreenState extends State<FeedScreen> {
                             ),
                           ),
                         ),
+                        if (svc != null && a.id != null) ...[
+                          const SizedBox(width: 4),
+                          _editActivityButton(a, accentColor),
+                        ],
                       ],
                     ),
                   ),

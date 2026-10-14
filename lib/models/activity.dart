@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../l10n/tr.dart';
 
@@ -22,6 +23,11 @@ class Activity {
   final String? authorName;
   final String? authorPhotoUrl;
 
+  /// ผู้ใช้แก้ไขสถิติ/ชื่อย้อนหลัง (เส้นทาง GPS ไม่ถูกแก้)
+  final DateTime? editedAt;
+  /// สถิติจริงที่บันทึกจาก GPS ก่อนแก้ครั้งแรก {distanceKm, durationSeconds, avgPaceSecPerKm}
+  final Map<String, num>? originalStats;
+
   const Activity({
     this.id,
     required this.uid,
@@ -39,7 +45,26 @@ class Activity {
     this.routePoints = const [],
     this.authorName,
     this.authorPhotoUrl,
+    this.editedAt,
+    this.originalStats,
   });
+
+  bool get isEdited => editedAt != null;
+
+  /// ระยะทางของเส้นทาง GPS ที่บันทึกไว้ (กม.) — ใช้เทียบตอนแก้ไขระยะทาง
+  double get gpsTrackKm {
+    double sum = 0;
+    for (var i = 0; i < routePoints.length - 1; i++) {
+      final a = routePoints[i], b = routePoints[i + 1];
+      final la1 = a['lat']! * math.pi / 180, la2 = b['lat']! * math.pi / 180;
+      final dLa = la2 - la1;
+      final dLo = (b['lng']! - a['lng']!) * math.pi / 180;
+      final h = math.sin(dLa / 2) * math.sin(dLa / 2) +
+          math.cos(la1) * math.cos(la2) * math.sin(dLo / 2) * math.sin(dLo / 2);
+      sum += 2 * 6371.0 * math.asin(math.min(1.0, math.sqrt(h)));
+    }
+    return sum;
+  }
 
   /// แปลง Activity เป็น Map สำหรับบันทึกใน Firestore
   Map<String, dynamic> toMap() => {
@@ -83,6 +108,9 @@ class Activity {
       }).toList(),
       authorName: map['authorName'] as String?,
       authorPhotoUrl: map['authorPhotoUrl'] as String?,
+      editedAt: (map['editedAt'] as Timestamp?)?.toDate(),
+      originalStats: (map['originalStats'] as Map?)?.map(
+          (k, v) => MapEntry(k.toString(), (v as num?) ?? 0)),
     );
   }
 
@@ -112,6 +140,8 @@ class Activity {
       routePoints: routePoints ?? this.routePoints,
       authorName: authorName,
       authorPhotoUrl: authorPhotoUrl,
+      editedAt: editedAt,
+      originalStats: originalStats,
     );
   }
 

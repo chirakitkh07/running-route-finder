@@ -8,6 +8,11 @@ service cloud.firestore {
     function isOwner(uid) {
       return isSignedIn() && request.auth.uid == uid;
     }
+    // แก้ไขกิจกรรมย้อนหลังได้ แต่ห้ามเปลี่ยนเส้นทาง GPS / เจ้าของ / เวลาเริ่มวิ่ง
+    function routeUnchanged() {
+      return !request.resource.data.diff(resource.data).affectedKeys()
+        .hasAny(['routePoints', 'uid', 'startedAt']);
+    }
     function isAdmin() {
       return isSignedIn()
         && request.auth.token.email in ['kittaphon.nk@gmail.com', 'hkmknas@gmail.com'];
@@ -25,7 +30,7 @@ service cloud.firestore {
         allow create, delete: if isOwner(uid);
         allow update: if isSignedIn()
           && (
-            isOwner(uid)
+            (isOwner(uid) && routeUnchanged())
             || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likedBy', 'likesCount'])
             || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['commentsCount'])
             || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likedBy', 'likesCount', 'commentsCount'])
@@ -57,7 +62,7 @@ service cloud.firestore {
       // เจ้าของแก้ไขได้ทุก field / คนอื่นอัปเดตได้เฉพาะ like + comment count
       allow update: if isSignedIn()
         && (
-          resource.data.uid == request.auth.uid
+          (resource.data.uid == request.auth.uid && routeUnchanged())
           || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likedBy', 'likesCount'])
           || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['commentsCount'])
           || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likedBy', 'likesCount', 'commentsCount'])

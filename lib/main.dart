@@ -108,32 +108,34 @@ class AuthGate extends StatelessWidget {
       );
     }
 
-    return ValueListenableBuilder<bool>(
-      valueListenable: AuthService.isRegistering,
-      builder: (context, isRegistering, _) {
-        if (isRegistering) {
-          return const LoginScreen();
+    // LoginScreen อยู่ตำแหน่งเดิมในต้นไม้วิดเจ็ตเสมอ (StreamBuilder → ValueListenableBuilder)
+    // ระหว่างตรวจสอบการเข้าสู่ระบบ state ของฟอร์ม/ข้อความแจ้งเตือนจึงไม่หาย
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        // Show loading while checking auth state
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(
+                color: AppColors.primary,
+              ),
+            ),
+          );
         }
-        return StreamBuilder<User?>(
-          stream: FirebaseAuth.instance.authStateChanges(),
-          builder: (context, snapshot) {
-            // Show loading while checking auth state
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Scaffold(
-                body: Center(
-                  child: CircularProgressIndicator(
-                    color: AppColors.primary,
-                  ),
-                ),
-              );
-            }
-
-            // If user is logged in, show HomeScreen
-            if (snapshot.hasData) {
+        return ValueListenableBuilder<bool>(
+          valueListenable: AuthService.authInProgress,
+          builder: (context, inProgress, _) {
+            final user = snapshot.data;
+            if (user != null && !inProgress) {
+              // บัญชีที่ยังไม่ยืนยันอีเมล (เช่น ปิดแอประหว่างตรวจสอบ) → ออกจากระบบ
+              if (AuthService.requiresEmailVerification(user)) {
+                WidgetsBinding.instance
+                    .addPostFrameCallback((_) => FirebaseAuth.instance.signOut());
+                return const LoginScreen();
+              }
               return const HomeScreen();
             }
-
-            // Otherwise show LoginScreen
             return const LoginScreen();
           },
         );

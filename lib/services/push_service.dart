@@ -85,6 +85,16 @@ class PushService {
     }
   }
 
+  /// ลบแจ้งเตือนบนแถบแจ้งเตือนที่แสดงด้วย [showSystemNotification] (tag เดียวกัน)
+  static Future<void> cancelSystemNotification(String tag) async {
+    if (!_supported) return;
+    try {
+      await _local.cancel(id: 0, tag: tag);
+    } catch (e) {
+      debugPrint('[Push] cancelSystemNotification error: $e');
+    }
+  }
+
   /// เรียกครั้งเดียวหลัง Firebase.initializeApp
   static Future<void> init() async {
     if (_initialized || !_supported) return;
