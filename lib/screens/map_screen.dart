@@ -1714,7 +1714,9 @@ class _MapScreenState extends State<MapScreen> {
         radiusKm: 5.0,
         walkableLengthKm: scored.walkableLengthKm,
       );
-      final reasons = ZoneRecommender.generateReasons(scored, userDistKm: distKm, pm25: pm25);
+      // ยังไม่รู้ตำแหน่งจริง (ใช้ศูนย์กลางเมืองแทน) → ไม่แสดงเหตุผล "ใกล้คุณ" ที่ไม่จริง
+      final reasons = ZoneRecommender.generateReasons(scored,
+          userDistKm: _isCurrentPosValid ? distKm : null, pm25: pm25);
       _replaceZone(scored.copyWith(
         recommendationScore: rScore,
         recommendationReasons: reasons,
