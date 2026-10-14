@@ -1,0 +1,272 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart';
+import '../l10n/tr.dart';
+
+/// ผลลัพธ์จาก AI Moderation
+class ModerationResult {
+  /// ผ่านการตรวจสอบหรือไม่
+  final bool isValid;
+
+  /// เหตุผลที่ไม่ผ่าน (ถ้ามี)
+  final String reason;
+
+  /// ข้อความแจ้งเตือนต่อผู้ใช้ (ภาษาไทย)
+  final String userMessage;
+
+  /// เกิดจาก API error หรือไม่ (ใช้แยก fail-safe vs rejected จริง)
+  final bool isApiError;
+
+  /// คะแนนความเชื่อมั่นของผลการตัดสินจาก AI (0–1) — UC-09 / UC-15
+  final double confidence;
+
+  /// เกณฑ์ความเชื่อมั่น: ผ่านแต่ต่ำกว่าค่านี้ → ส่งให้ผู้ดูแลตรวจสอบก่อนเผยแพร่ (UC-15 A1)
+  static const double reviewThreshold = 0.80;
+
+  const ModerationResult({
+    required this.isValid,
+    this.reason = '',
+    this.userMessage = '',
+    this.isApiError = false,
+    this.confidence = 0.0,
+  });
+
+  /// ผ่านแต่ความเชื่อมั่นระดับปานกลาง หรือ AI ไม่ตอบสนอง → เก็บเป็น 'pending'
+  bool get needsAdminReview =>
+      isApiError || (isValid && confidence < reviewThreshold);
+
+  /// ผ่านการตรวจสอบปกติ
+  factory ModerationResult.passed({double confidence = 1.0, String reason = ''}) =>
+      ModerationResult(isValid: true, confidence: confidence, reason: reason);
+
+  /// ไม่ผ่าน — เนื้อหาไม่เหมาะสม
+  factory ModerationResult.rejected(String reason, String userMessage,
+          {double confidence = 1.0}) =>
+      ModerationResult(
+        isValid: false,
+        reason: reason,
+        userMessage: userMessage,
+        confidence: confidence,
+      );
+
+  /// API พัง → UC-15 E2: เก็บรายงานไว้ในสถานะรอตรวจสอบชั่วคราว (pending)
+  factory ModerationResult.apiError(String detail) => ModerationResult(
+        isValid: false,
+        reason: 'API Error: $detail',
+        userMessage:
+            tr('ระบบตรวจสอบเนื้อหาไม่ตอบสนอง รายงานของคุณถูกเก็บไว้ในสถานะรอตรวจสอบ และจะแสดงบนแผนที่เมื่อผู้ดูแลระบบอนุมัติ', 'The moderation service did not respond. Your report is pending and will appear on the map once an admin approves it'),
+        isApiError: true,
+        confidence: 0.0,
+      );
+}
+
+/// UC-05 E1: AI Moderation Service
+/// ใช้ Gemini REST API ตรวจสอบความถูกต้องของรายงานเหตุการณ์ก่อนบันทึกลงฐานข้อมูล
+class AiModerationService {
+  // ─── API Key ─────────────────────────────────────────────────────────────
+  // TODO: ย้ายไปเก็บใน .env หรือ Firebase Remote Config ก่อน release จริง
+  static const String _apiKey =
+      'AQ.Ab8RN6I1Pa24EY2-WDliDoflWAEofcsMBK2Ja5AD3wB7jHr4dA';
+
+  static const String _baseUrl =
+      'https://generativelanguage.googleapis.com/v1beta/models';
+
+  /// ลำดับ model ที่จะลอง (fallback ตามลำดับ)
+  static const List<String> _modelCandidates = [
+    'gemini-3.5-flash',
+    'gemini-3.7-flash',
+    'gemini-flash-latest',
+    'gemini-3.5-flash-lite',
+  ];
+
+  /// ตรวจสอบเนื้อหารายงานเหตุการณ์ด้วย Gemini AI
+  ///
+  /// [incidentType] — ประเภทเหตุการณ์ที่เลือก เช่น 'dogs', 'slippery'
+  /// [description] — รายละเอียดที่ผู้ใช้กรอก (อาจว่างได้)
+  /// [typeLabelTh] — ชื่อประเภทภาษาไทย เช่น '🐶 สุนัขจรจัด/ดุร้าย'
+  ///
+  /// คืน [ModerationResult.apiError] ถ้าทุก model ล้มเหลว (fail-safe)
+  static Future<ModerationResult> validateReport({
+    required String incidentType,
+    required String description,
+    required String typeLabelTh,
+  }) async {
+    if (_apiKey.isEmpty || _apiKey == 'YOUR_GEMINI_API_KEY') {
+      debugPrint('[AiModeration] ⚠️ API Key ยังไม่ได้ตั้งค่า → fail-safe');
+      return ModerationResult.apiError('API Key not configured');
+    }
+
+    final prompt = _buildPrompt(
+      incidentType: incidentType,
+      description: description,
+      typeLabelTh: typeLabelTh,
+    );
+
+    String? lastError;
+    for (final modelName in _modelCandidates) {
+      debugPrint('[AiModeration] 🔄 ลอง model: $modelName');
+      try {
+        final url = Uri.parse('$_baseUrl/$modelName:generateContent?key=$_apiKey');
+
+        final body = jsonEncode({
+          'contents': [
+            {
+              'parts': [
+                {'text': prompt}
+              ]
+            }
+          ],
+          'generationConfig': {
+            'temperature': 0.0,
+            'maxOutputTokens': 512,
+          },
+        });
+
+        final response = await http
+            .post(
+              url,
+              headers: {'Content-Type': 'application/json'},
+              body: body,
+            )
+            .timeout(const Duration(seconds: 15));
+
+        debugPrint('[AiModeration] HTTP ${response.statusCode} ($modelName)');
+
+        if (response.statusCode == 404 || response.statusCode == 400) {
+          lastError = 'HTTP ${response.statusCode}: ${response.body}';
+          debugPrint('[AiModeration] ❌ $lastError');
+          continue;
+        }
+
+        if (response.statusCode != 200) {
+          lastError = 'HTTP ${response.statusCode}: ${response.body}';
+          debugPrint('[AiModeration] ❌ $lastError');
+          continue;
+        }
+
+        // Parse response
+        final json = jsonDecode(response.body) as Map<String, dynamic>;
+        final candidates = json['candidates'] as List<dynamic>?;
+        if (candidates == null || candidates.isEmpty) {
+          lastError = 'No candidates in response';
+          continue;
+        }
+
+        final content = candidates[0]['content'] as Map<String, dynamic>?;
+        final parts = content?['parts'] as List<dynamic>?;
+        final text = (parts?[0]['text'] as String?) ?? '';
+
+        debugPrint('[AiModeration] ✅ Model "$modelName" ตอบกลับ: $text');
+
+        if (text.trim().isEmpty) {
+          lastError = 'Empty response from $modelName';
+          continue;
+        }
+
+        return _parseResponse(text);
+      } catch (e) {
+        lastError = e.toString();
+        debugPrint('[AiModeration] ❌ Error ($modelName): $lastError');
+        continue;
+      }
+    }
+
+    debugPrint(
+      '[AiModeration] 🚫 ทุก model ล้มเหลว → fail-safe. Last: $lastError',
+    );
+    return ModerationResult.apiError(lastError ?? 'All models failed');
+  }
+
+  /// สร้าง prompt สำหรับส่งให้ Gemini
+  static String _buildPrompt({
+    required String incidentType,
+    required String description,
+    required String typeLabelTh,
+  }) {
+    final desc =
+        description.trim().isEmpty ? '(ไม่ได้กรอก)' : description.trim();
+    return '''
+You are an AI content moderation system for a running/cycling safety app in Chiang Mai, Thailand.
+Your job is to check if a user-submitted incident report is appropriate and relevant.
+
+Incident Data:
+- Type: $typeLabelTh ($incidentType)
+- User Description: "$desc"
+
+Moderation Rules:
+1. Content must relate to running/cycling path safety
+2. No profanity, inappropriate content, or spam
+3. If type is valid but description is empty → PASS (valid=true)
+4. If description clearly contradicts the selected type → FAIL (valid=false)
+5. No personal data (phone numbers, emails, etc.) → FAIL (valid=false)
+6. Promotional content or advertisements → FAIL (valid=false)
+7. Threats or harmful content → FAIL (valid=false)
+
+IMPORTANT: Output ONLY a raw JSON object. Do NOT use markdown. Do NOT use code blocks. Do NOT add any text before or after the JSON.
+
+Also give "confidence": a number from 0.0 to 1.0 describing how certain you are of your decision.
+
+Output format (exactly this, no extra text):
+{"valid": true, "confidence": 0.93, "reason": "short reason in English", "user_message": ""}
+
+If valid=false, set user_message to a polite ${tr('Thai', 'English')} explanation.
+Example: {"valid": false, "confidence": 0.97, "reason": "contains phone number", "user_message": "กรุณาอย่าใส่ข้อมูลส่วนตัว เช่น เบอร์โทรศัพท์"}
+''';
+
+  }
+
+  /// แปลง JSON response จาก Gemini
+  static ModerationResult _parseResponse(String text) {
+    try {
+      final jsonStr = _extractJson(text);
+      if (jsonStr == null) {
+        debugPrint('[AiModeration] ⚠️ ไม่พบ JSON ใน response');
+        return ModerationResult.apiError('Invalid JSON response');
+      }
+
+      final Map<String, dynamic> data =
+          jsonDecode(jsonStr) as Map<String, dynamic>;
+
+      final isValid = data['valid'] as bool? ?? true;
+      final reason = (data['reason'] as String?) ?? '';
+      final userMsg = (data['user_message'] as String?) ?? '';
+      final confidence =
+          ((data['confidence'] as num?)?.toDouble() ?? 0.5).clamp(0.0, 1.0).toDouble();
+
+      if (!isValid) {
+        debugPrint('[AiModeration] ❌ ไม่ผ่าน: $reason');
+        return ModerationResult.rejected(
+          reason,
+          userMsg.isEmpty
+              ? tr('เนื้อหาไม่ผ่านการตรวจสอบ กรุณาแก้ไขและลองใหม่', 'Content did not pass moderation. Please edit and try again')
+              : userMsg,
+          confidence: confidence,
+        );
+      }
+
+      debugPrint('[AiModeration] ✅ ผ่าน: $reason');
+      return ModerationResult.passed(confidence: confidence, reason: reason);
+    } catch (e) {
+      debugPrint('[AiModeration] ⚠️ Parse error: $e');
+      return ModerationResult.apiError('Parse error: $e');
+    }
+  }
+
+  /// ดึง JSON string จากข้อความ (รองรับ markdown code block)
+  static String? _extractJson(String text) {
+    final trimmed = text.trim();
+    if (trimmed.startsWith('{') && trimmed.endsWith('}')) return trimmed;
+
+    final codeBlock = RegExp(
+      r'```(?:json)?\s*([\s\S]*?)\s*```',
+    ).firstMatch(trimmed);
+    if (codeBlock != null) return codeBlock.group(1)?.trim();
+
+    final jsonBlock = RegExp(r'\{[\s\S]*\}').firstMatch(trimmed);
+    if (jsonBlock != null) return jsonBlock.group(0);
+
+    return null;
+  }
+}
+
+

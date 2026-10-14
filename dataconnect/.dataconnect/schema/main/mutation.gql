@@ -1,0 +1,562 @@
+extend type Mutation {
+  """
+  ✨ Insert a single `ExerciseType` into the table and return its key. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  exerciseType_insert(
+    """
+    Data object to insert into the table.
+    """
+    data: ExerciseType_Data!
+  ): ExerciseType_KeyOutput! @fdc_generated(from: "ExerciseType", purpose: INSERT_SINGLE)
+  """
+  ✨ Insert a single `Route` into the table and return its key. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  route_insert(
+    """
+    Data object to insert into the table.
+    """
+    data: Route_Data!
+  ): Route_KeyOutput! @fdc_generated(from: "Route", purpose: INSERT_SINGLE)
+  """
+  ✨ Insert a single `Session` into the table and return its key. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  session_insert(
+    """
+    Data object to insert into the table.
+    """
+    data: Session_Data!
+  ): Session_KeyOutput! @fdc_generated(from: "Session", purpose: INSERT_SINGLE)
+  """
+  ✨ Insert a single `User` into the table and return its key. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  user_insert(
+    """
+    Data object to insert into the table.
+    """
+    data: User_Data!
+  ): User_KeyOutput! @fdc_generated(from: "User", purpose: INSERT_SINGLE)
+  """
+  ✨ Insert a single `Waypoint` into the table and return its key. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  waypoint_insert(
+    """
+    Data object to insert into the table.
+    """
+    data: Waypoint_Data!
+  ): Waypoint_KeyOutput! @fdc_generated(from: "Waypoint", purpose: INSERT_SINGLE)
+  """
+  ✨ Insert `ExerciseType` objects into the table and return their keys. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  exerciseType_insertMany(
+    """
+    List of data objects to insert into the table.
+    """
+    data: [ExerciseType_Data!]!
+  ): [ExerciseType_KeyOutput!]! @fdc_generated(from: "ExerciseType", purpose: INSERT_MULTIPLE)
+  """
+  ✨ Insert `Route` objects into the table and return their keys. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  route_insertMany(
+    """
+    List of data objects to insert into the table.
+    """
+    data: [Route_Data!]!
+  ): [Route_KeyOutput!]! @fdc_generated(from: "Route", purpose: INSERT_MULTIPLE)
+  """
+  ✨ Insert `Session` objects into the table and return their keys. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  session_insertMany(
+    """
+    List of data objects to insert into the table.
+    """
+    data: [Session_Data!]!
+  ): [Session_KeyOutput!]! @fdc_generated(from: "Session", purpose: INSERT_MULTIPLE)
+  """
+  ✨ Insert `User` objects into the table and return their keys. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  user_insertMany(
+    """
+    List of data objects to insert into the table.
+    """
+    data: [User_Data!]!
+  ): [User_KeyOutput!]! @fdc_generated(from: "User", purpose: INSERT_MULTIPLE)
+  """
+  ✨ Insert `Waypoint` objects into the table and return their keys. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  waypoint_insertMany(
+    """
+    List of data objects to insert into the table.
+    """
+    data: [Waypoint_Data!]!
+  ): [Waypoint_KeyOutput!]! @fdc_generated(from: "Waypoint", purpose: INSERT_MULTIPLE)
+  """
+  ✨ Insert or update a single `ExerciseType` into the table, based on the primary key. Returns the key of the newly inserted or existing updated `ExerciseType`.
+  """
+  exerciseType_upsert(
+    """
+    Data object to insert or update if it already exists.
+    """
+    data: ExerciseType_Data!
+  ): ExerciseType_KeyOutput! @fdc_generated(from: "ExerciseType", purpose: UPSERT_SINGLE)
+  """
+  ✨ Insert or update a single `Route` into the table, based on the primary key. Returns the key of the newly inserted or existing updated `Route`.
+  """
+  route_upsert(
+    """
+    Data object to insert or update if it already exists.
+    """
+    data: Route_Data!
+  ): Route_KeyOutput! @fdc_generated(from: "Route", purpose: UPSERT_SINGLE)
+  """
+  ✨ Insert or update a single `Session` into the table, based on the primary key. Returns the key of the newly inserted or existing updated `Session`.
+  """
+  session_upsert(
+    """
+    Data object to insert or update if it already exists.
+    """
+    data: Session_Data!
+  ): Session_KeyOutput! @fdc_generated(from: "Session", purpose: UPSERT_SINGLE)
+  """
+  ✨ Insert or update a single `User` into the table, based on the primary key. Returns the key of the newly inserted or existing updated `User`.
+  """
+  user_upsert(
+    """
+    Data object to insert or update if it already exists.
+    """
+    data: User_Data!
+  ): User_KeyOutput! @fdc_generated(from: "User", purpose: UPSERT_SINGLE)
+  """
+  ✨ Insert or update a single `Waypoint` into the table, based on the primary key. Returns the key of the newly inserted or existing updated `Waypoint`.
+  """
+  waypoint_upsert(
+    """
+    Data object to insert or update if it already exists.
+    """
+    data: Waypoint_Data!
+  ): Waypoint_KeyOutput! @fdc_generated(from: "Waypoint", purpose: UPSERT_SINGLE)
+  """
+  ✨ Insert or update `ExerciseType` objects into the table, based on the primary key. Returns the key of the newly inserted or existing updated `ExerciseType`.
+  """
+  exerciseType_upsertMany(
+    """
+    List of data objects to insert or update if it already exists.
+    """
+    data: [ExerciseType_Data!]!
+  ): [ExerciseType_KeyOutput!]! @fdc_generated(from: "ExerciseType", purpose: UPSERT_MULTIPLE)
+  """
+  ✨ Insert or update `Route` objects into the table, based on the primary key. Returns the key of the newly inserted or existing updated `Route`.
+  """
+  route_upsertMany(
+    """
+    List of data objects to insert or update if it already exists.
+    """
+    data: [Route_Data!]!
+  ): [Route_KeyOutput!]! @fdc_generated(from: "Route", purpose: UPSERT_MULTIPLE)
+  """
+  ✨ Insert or update `Session` objects into the table, based on the primary key. Returns the key of the newly inserted or existing updated `Session`.
+  """
+  session_upsertMany(
+    """
+    List of data objects to insert or update if it already exists.
+    """
+    data: [Session_Data!]!
+  ): [Session_KeyOutput!]! @fdc_generated(from: "Session", purpose: UPSERT_MULTIPLE)
+  """
+  ✨ Insert or update `User` objects into the table, based on the primary key. Returns the key of the newly inserted or existing updated `User`.
+  """
+  user_upsertMany(
+    """
+    List of data objects to insert or update if it already exists.
+    """
+    data: [User_Data!]!
+  ): [User_KeyOutput!]! @fdc_generated(from: "User", purpose: UPSERT_MULTIPLE)
+  """
+  ✨ Insert or update `Waypoint` objects into the table, based on the primary key. Returns the key of the newly inserted or existing updated `Waypoint`.
+  """
+  waypoint_upsertMany(
+    """
+    List of data objects to insert or update if it already exists.
+    """
+    data: [Waypoint_Data!]!
+  ): [Waypoint_KeyOutput!]! @fdc_generated(from: "Waypoint", purpose: UPSERT_MULTIPLE)
+  """
+  ✨ Update a single `ExerciseType` based on `id`, `key` or `first`, setting columns specified in `data`. Returns the key of the updated `ExerciseType` or `null` if not found.
+  """
+  exerciseType_update(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: ExerciseType_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: ExerciseType_FirstRow
+
+    """
+    Data object containing fields to be updated.
+    """
+    data: ExerciseType_Data!
+  ): ExerciseType_KeyOutput @fdc_generated(from: "ExerciseType", purpose: UPDATE_SINGLE)
+  """
+  ✨ Update a single `Route` based on `id`, `key` or `first`, setting columns specified in `data`. Returns the key of the updated `Route` or `null` if not found.
+  """
+  route_update(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Route_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Route_FirstRow
+
+    """
+    Data object containing fields to be updated.
+    """
+    data: Route_Data!
+  ): Route_KeyOutput @fdc_generated(from: "Route", purpose: UPDATE_SINGLE)
+  """
+  ✨ Update a single `Session` based on `id`, `key` or `first`, setting columns specified in `data`. Returns the key of the updated `Session` or `null` if not found.
+  """
+  session_update(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Session_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Session_FirstRow
+
+    """
+    Data object containing fields to be updated.
+    """
+    data: Session_Data!
+  ): Session_KeyOutput @fdc_generated(from: "Session", purpose: UPDATE_SINGLE)
+  """
+  ✨ Update a single `User` based on `id`, `key` or `first`, setting columns specified in `data`. Returns the key of the updated `User` or `null` if not found.
+  """
+  user_update(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: User_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: User_FirstRow
+
+    """
+    Data object containing fields to be updated.
+    """
+    data: User_Data!
+  ): User_KeyOutput @fdc_generated(from: "User", purpose: UPDATE_SINGLE)
+  """
+  ✨ Update a single `Waypoint` based on `id`, `key` or `first`, setting columns specified in `data`. Returns the key of the updated `Waypoint` or `null` if not found.
+  """
+  waypoint_update(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Waypoint_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Waypoint_FirstRow
+
+    """
+    Data object containing fields to be updated.
+    """
+    data: Waypoint_Data!
+  ): Waypoint_KeyOutput @fdc_generated(from: "Waypoint", purpose: UPDATE_SINGLE)
+  """
+  ✨ Update `ExerciseType` objects matching `where` conditions (or `all`, if true) according to `data`. Returns the number of rows updated.
+  """
+  exerciseType_updateMany(
+    """
+    Filter condition to specify which rows to update.
+    """
+    where: ExerciseType_Filter
+
+    """
+    Set to true to update all rows.
+    """
+    all: Boolean = false
+
+    """
+    Data object containing fields to update.
+    """
+    data: ExerciseType_Data!
+  ): Int! @fdc_generated(from: "ExerciseType", purpose: UPDATE_MULTIPLE)
+  """
+  ✨ Update `Route` objects matching `where` conditions (or `all`, if true) according to `data`. Returns the number of rows updated.
+  """
+  route_updateMany(
+    """
+    Filter condition to specify which rows to update.
+    """
+    where: Route_Filter
+
+    """
+    Set to true to update all rows.
+    """
+    all: Boolean = false
+
+    """
+    Data object containing fields to update.
+    """
+    data: Route_Data!
+  ): Int! @fdc_generated(from: "Route", purpose: UPDATE_MULTIPLE)
+  """
+  ✨ Update `Session` objects matching `where` conditions (or `all`, if true) according to `data`. Returns the number of rows updated.
+  """
+  session_updateMany(
+    """
+    Filter condition to specify which rows to update.
+    """
+    where: Session_Filter
+
+    """
+    Set to true to update all rows.
+    """
+    all: Boolean = false
+
+    """
+    Data object containing fields to update.
+    """
+    data: Session_Data!
+  ): Int! @fdc_generated(from: "Session", purpose: UPDATE_MULTIPLE)
+  """
+  ✨ Update `User` objects matching `where` conditions (or `all`, if true) according to `data`. Returns the number of rows updated.
+  """
+  user_updateMany(
+    """
+    Filter condition to specify which rows to update.
+    """
+    where: User_Filter
+
+    """
+    Set to true to update all rows.
+    """
+    all: Boolean = false
+
+    """
+    Data object containing fields to update.
+    """
+    data: User_Data!
+  ): Int! @fdc_generated(from: "User", purpose: UPDATE_MULTIPLE)
+  """
+  ✨ Update `Waypoint` objects matching `where` conditions (or `all`, if true) according to `data`. Returns the number of rows updated.
+  """
+  waypoint_updateMany(
+    """
+    Filter condition to specify which rows to update.
+    """
+    where: Waypoint_Filter
+
+    """
+    Set to true to update all rows.
+    """
+    all: Boolean = false
+
+    """
+    Data object containing fields to update.
+    """
+    data: Waypoint_Data!
+  ): Int! @fdc_generated(from: "Waypoint", purpose: UPDATE_MULTIPLE)
+  """
+  ✨ Delete a single `ExerciseType` based on `id`, `key` or `first` and return its key (or `null` if not found).
+  """
+  exerciseType_delete(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: ExerciseType_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: ExerciseType_FirstRow
+  ): ExerciseType_KeyOutput @fdc_generated(from: "ExerciseType", purpose: DELETE_SINGLE)
+  """
+  ✨ Delete a single `Route` based on `id`, `key` or `first` and return its key (or `null` if not found).
+  """
+  route_delete(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Route_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Route_FirstRow
+  ): Route_KeyOutput @fdc_generated(from: "Route", purpose: DELETE_SINGLE)
+  """
+  ✨ Delete a single `Session` based on `id`, `key` or `first` and return its key (or `null` if not found).
+  """
+  session_delete(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Session_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Session_FirstRow
+  ): Session_KeyOutput @fdc_generated(from: "Session", purpose: DELETE_SINGLE)
+  """
+  ✨ Delete a single `User` based on `id`, `key` or `first` and return its key (or `null` if not found).
+  """
+  user_delete(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: User_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: User_FirstRow
+  ): User_KeyOutput @fdc_generated(from: "User", purpose: DELETE_SINGLE)
+  """
+  ✨ Delete a single `Waypoint` based on `id`, `key` or `first` and return its key (or `null` if not found).
+  """
+  waypoint_delete(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Waypoint_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Waypoint_FirstRow
+  ): Waypoint_KeyOutput @fdc_generated(from: "Waypoint", purpose: DELETE_SINGLE)
+  """
+  ✨ Delete `ExerciseType` objects matching `where` conditions (or `all`, if true). Returns the number of rows deleted.
+  """
+  exerciseType_deleteMany(
+    """
+    Filter condition to specify which rows to delete.
+    """
+    where: ExerciseType_Filter
+
+    """
+    Set to true to delete all rows.
+    """
+    all: Boolean = false
+  ): Int! @fdc_generated(from: "ExerciseType", purpose: DELETE_MULTIPLE)
+  """
+  ✨ Delete `Route` objects matching `where` conditions (or `all`, if true). Returns the number of rows deleted.
+  """
+  route_deleteMany(
+    """
+    Filter condition to specify which rows to delete.
+    """
+    where: Route_Filter
+
+    """
+    Set to true to delete all rows.
+    """
+    all: Boolean = false
+  ): Int! @fdc_generated(from: "Route", purpose: DELETE_MULTIPLE)
+  """
+  ✨ Delete `Session` objects matching `where` conditions (or `all`, if true). Returns the number of rows deleted.
+  """
+  session_deleteMany(
+    """
+    Filter condition to specify which rows to delete.
+    """
+    where: Session_Filter
+
+    """
+    Set to true to delete all rows.
+    """
+    all: Boolean = false
+  ): Int! @fdc_generated(from: "Session", purpose: DELETE_MULTIPLE)
+  """
+  ✨ Delete `User` objects matching `where` conditions (or `all`, if true). Returns the number of rows deleted.
+  """
+  user_deleteMany(
+    """
+    Filter condition to specify which rows to delete.
+    """
+    where: User_Filter
+
+    """
+    Set to true to delete all rows.
+    """
+    all: Boolean = false
+  ): Int! @fdc_generated(from: "User", purpose: DELETE_MULTIPLE)
+  """
+  ✨ Delete `Waypoint` objects matching `where` conditions (or `all`, if true). Returns the number of rows deleted.
+  """
+  waypoint_deleteMany(
+    """
+    Filter condition to specify which rows to delete.
+    """
+    where: Waypoint_Filter
+
+    """
+    Set to true to delete all rows.
+    """
+    all: Boolean = false
+  ): Int! @fdc_generated(from: "Waypoint", purpose: DELETE_MULTIPLE)
+}

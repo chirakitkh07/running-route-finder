@@ -1,0 +1,74 @@
+# ===== Secrets & credentials =====
+.env
+.env.*
+!.env.example
+**/serviceAccount*.json
+**/*adminsdk*.json
+**/*.jks
+**/*.keystore
+android/key.properties
+android/local.properties
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+macos/Runner/GoogleService-Info.plist
+lib/firebase_options.dart
+
+# Backend config (if contains real keys)
+# backend/config/*.json
+
+# ===== Build & generated =====
+build/
+.dart_tool/
+.flutter-plugins-dependencies
+**/Flutter/ephemeral/
+
+# ===== IDE =====
+.idea/
+*.iml
+.vscode/
+devtools_options.yaml
+
+# ===== OS junk =====
+.DS_Store
+*.class
+*.log
+*.pyc
+*.swp
+Thumbs.db
+
+# ===== Backups & temp =====
+_backup_before_*/
+*.tgz
+*.sqlite
+.widget_preview/
+
+# ===== Dependencies =====
+backend/node_modules/
+node_modules/
+
+# ===== Folders not needed on repo =====
+demov1/
+
+# ===== Project-specific exclusions =====
+CLAUDE.md
+prompt/
+back.md
+
+# ===== Misc =====
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.pub-cache/
+.pub/
+/coverage/
+app.*.symbols
+app.*.map.json
+/android/app/debug
+/android/app/profile
+/android/app/release

@@ -1,0 +1,267 @@
+extend type Query {
+  """
+  ✨ Look up a single `ExerciseType` based on `id`, `key` or `first` and return selected fields (or `null` if not found).
+  """
+  exerciseType(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: ExerciseType_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: ExerciseType_FirstRow
+  ): ExerciseType @fdc_generated(from: "ExerciseType", purpose: QUERY_SINGLE)
+  """
+  ✨ Look up a single `Route` based on `id`, `key` or `first` and return selected fields (or `null` if not found).
+  """
+  route(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Route_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Route_FirstRow
+  ): Route @fdc_generated(from: "Route", purpose: QUERY_SINGLE)
+  """
+  ✨ Look up a single `Session` based on `id`, `key` or `first` and return selected fields (or `null` if not found).
+  """
+  session(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Session_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Session_FirstRow
+  ): Session @fdc_generated(from: "Session", purpose: QUERY_SINGLE)
+  """
+  ✨ Look up a single `User` based on `id`, `key` or `first` and return selected fields (or `null` if not found).
+  """
+  user(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: User_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: User_FirstRow
+  ): User @fdc_generated(from: "User", purpose: QUERY_SINGLE)
+  """
+  ✨ Look up a single `Waypoint` based on `id`, `key` or `first` and return selected fields (or `null` if not found).
+  """
+  waypoint(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Waypoint_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Waypoint_FirstRow
+  ): Waypoint @fdc_generated(from: "Waypoint", purpose: QUERY_SINGLE)
+  """
+  ✨ List `ExerciseType` objects in the table and return selected fields, optionally filtered by `where` conditions
+  """
+  exerciseTypes(
+    """
+    Filter condition to narrow down the query results.
+    """
+    where: ExerciseType_Filter
+
+    """
+    Order the query results by specific fields.
+    """
+    orderBy: [ExerciseType_Order!]
+
+    """
+    Number of rows to skip before starting to return the results.
+    """
+    offset: Int
+
+    """
+    Maximum number of rows to return (defaults to 100 rows).
+    """
+    limit: Int = 100
+
+    """
+    Set to true to return distinct results.
+    """
+    distinct: Boolean = false
+
+    """
+    Filter condition to apply to the groups of aggregate queries.
+    """
+    having: ExerciseType_Having
+  ): [ExerciseType!]! @fdc_generated(from: "ExerciseType", purpose: QUERY_MULTIPLE)
+  """
+  ✨ List `Route` objects in the table and return selected fields, optionally filtered by `where` conditions
+  """
+  routes(
+    """
+    Filter condition to narrow down the query results.
+    """
+    where: Route_Filter
+
+    """
+    Order the query results by specific fields.
+    """
+    orderBy: [Route_Order!]
+
+    """
+    Number of rows to skip before starting to return the results.
+    """
+    offset: Int
+
+    """
+    Maximum number of rows to return (defaults to 100 rows).
+    """
+    limit: Int = 100
+
+    """
+    Set to true to return distinct results.
+    """
+    distinct: Boolean = false
+
+    """
+    Filter condition to apply to the groups of aggregate queries.
+    """
+    having: Route_Having
+  ): [Route!]! @fdc_generated(from: "Route", purpose: QUERY_MULTIPLE)
+  """
+  ✨ List `Session` objects in the table and return selected fields, optionally filtered by `where` conditions
+  """
+  sessions(
+    """
+    Filter condition to narrow down the query results.
+    """
+    where: Session_Filter
+
+    """
+    Order the query results by specific fields.
+    """
+    orderBy: [Session_Order!]
+
+    """
+    Number of rows to skip before starting to return the results.
+    """
+    offset: Int
+
+    """
+    Maximum number of rows to return (defaults to 100 rows).
+    """
+    limit: Int = 100
+
+    """
+    Set to true to return distinct results.
+    """
+    distinct: Boolean = false
+
+    """
+    Filter condition to apply to the groups of aggregate queries.
+    """
+    having: Session_Having
+  ): [Session!]! @fdc_generated(from: "Session", purpose: QUERY_MULTIPLE)
+  """
+  ✨ List `User` objects in the table and return selected fields, optionally filtered by `where` conditions
+  """
+  users(
+    """
+    Filter condition to narrow down the query results.
+    """
+    where: User_Filter
+
+    """
+    Order the query results by specific fields.
+    """
+    orderBy: [User_Order!]
+
+    """
+    Number of rows to skip before starting to return the results.
+    """
+    offset: Int
+
+    """
+    Maximum number of rows to return (defaults to 100 rows).
+    """
+    limit: Int = 100
+
+    """
+    Set to true to return distinct results.
+    """
+    distinct: Boolean = false
+
+    """
+    Filter condition to apply to the groups of aggregate queries.
+    """
+    having: User_Having
+  ): [User!]! @fdc_generated(from: "User", purpose: QUERY_MULTIPLE)
+  """
+  ✨ List `Waypoint` objects in the table and return selected fields, optionally filtered by `where` conditions
+  """
+  waypoints(
+    """
+    Filter condition to narrow down the query results.
+    """
+    where: Waypoint_Filter
+
+    """
+    Order the query results by specific fields.
+    """
+    orderBy: [Waypoint_Order!]
+
+    """
+    Number of rows to skip before starting to return the results.
+    """
+    offset: Int
+
+    """
+    Maximum number of rows to return (defaults to 100 rows).
+    """
+    limit: Int = 100
+
+    """
+    Set to true to return distinct results.
+    """
+    distinct: Boolean = false
+
+    """
+    Filter condition to apply to the groups of aggregate queries.
+    """
+    having: Waypoint_Having
+  ): [Waypoint!]! @fdc_generated(from: "Waypoint", purpose: QUERY_MULTIPLE)
+}

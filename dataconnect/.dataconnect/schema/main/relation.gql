@@ -1,0 +1,794 @@
+extend type ExerciseType {
+  """
+  ✨ List `Session` objects in a one-to-many relationship (where `Session`.`exerciseType` is this object).
+  """
+  sessions_on_exerciseType(
+    """
+    Filter condition to narrow down the query results.
+    """
+    where: Session_Filter
+
+    """
+    Order the query results by specific fields.
+    """
+    orderBy: [Session_Order!]
+
+    """
+    Number of rows to skip before starting to return the results.
+    """
+    offset: Int
+
+    """
+    Maximum number of rows to return (defaults to 100 rows).
+    """
+    limit: Int = 100
+
+    """
+    Set to true to return distinct results.
+    """
+    distinct: Boolean = false
+
+    """
+    Filter condition to apply to the groups of aggregate queries.
+    """
+    having: Session_Having
+  ): [Session!]! @fdc_generated(from: "Session.exerciseType", purpose: QUERY_MULTIPLE_ONE_TO_MANY)
+  """
+  Implicit metadata field that cannot be written. It provides extra information about query results.
+  """
+  _metadata: _Metadata @fdc_generated(from: "ExerciseType", purpose: METADATA_FIELD)
+  """
+  ✨ Count the number of rows in the `ExerciseType` table.
+  """
+  _count: Int! @fdc_generated(from: "ExerciseType.", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `ExerciseType` table where the `id` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  id_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "ExerciseType.id", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `ExerciseType` table where the `name` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  name_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "ExerciseType.name", purpose: QUERY_COUNT)
+  """
+  A generated field that is used for caching results in SDKs.
+  """
+  _id: ID! @fdc_generated(from: "ExerciseType.id", purpose: ENTITY_ID)
+}
+extend type Route {
+  """
+  ✨ List `Session` objects in a one-to-many relationship (where `Session`.`route` is this object).
+  """
+  sessions_on_route(
+    """
+    Filter condition to narrow down the query results.
+    """
+    where: Session_Filter
+
+    """
+    Order the query results by specific fields.
+    """
+    orderBy: [Session_Order!]
+
+    """
+    Number of rows to skip before starting to return the results.
+    """
+    offset: Int
+
+    """
+    Maximum number of rows to return (defaults to 100 rows).
+    """
+    limit: Int = 100
+
+    """
+    Set to true to return distinct results.
+    """
+    distinct: Boolean = false
+
+    """
+    Filter condition to apply to the groups of aggregate queries.
+    """
+    having: Session_Having
+  ): [Session!]! @fdc_generated(from: "Session.route", purpose: QUERY_MULTIPLE_ONE_TO_MANY)
+  """
+  ✨ List `Waypoint` objects in a one-to-many relationship (where `Waypoint`.`route` is this object).
+  """
+  waypoints_on_route(
+    """
+    Filter condition to narrow down the query results.
+    """
+    where: Waypoint_Filter
+
+    """
+    Order the query results by specific fields.
+    """
+    orderBy: [Waypoint_Order!]
+
+    """
+    Number of rows to skip before starting to return the results.
+    """
+    offset: Int
+
+    """
+    Maximum number of rows to return (defaults to 100 rows).
+    """
+    limit: Int = 100
+
+    """
+    Set to true to return distinct results.
+    """
+    distinct: Boolean = false
+
+    """
+    Filter condition to apply to the groups of aggregate queries.
+    """
+    having: Waypoint_Having
+  ): [Waypoint!]! @fdc_generated(from: "Waypoint.route", purpose: QUERY_MULTIPLE_ONE_TO_MANY)
+  """
+  Implicit metadata field that cannot be written. It provides extra information about query results.
+  """
+  _metadata: _Metadata @fdc_generated(from: "Route", purpose: METADATA_FIELD)
+  """
+  ✨ Count the number of rows in the `Route` table.
+  """
+  _count: Int! @fdc_generated(from: "Route.", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `Route` table where the `createdAt` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  createdAt_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "Route.createdAt", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `Route` table where the `description` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  description_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "Route.description", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `Route` table where the `endLocation` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  endLocation_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "Route.endLocation", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `Route` table where the `estimatedDistance` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  estimatedDistance_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "Route.estimatedDistance", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `Route` table where the `estimatedDuration` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  estimatedDuration_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "Route.estimatedDuration", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `Route` table where the `id` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  id_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "Route.id", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `Route` table where the `name` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  name_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "Route.name", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `Route` table where the `startLocation` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  startLocation_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "Route.startLocation", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `Route` table where the `userId` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  userId_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "Route.userId", purpose: QUERY_COUNT)
+  """
+  ✨ Sum the `estimatedDistance` field in the `Route` table.
+  """
+  estimatedDistance_sum(
+    """
+    Set to true to sum the distinct values.
+    """
+    distinct: Boolean = false
+  ): Float @fdc_generated(from: "Route.estimatedDistance", purpose: QUERY_SUM)
+  """
+  ✨ Sum the `estimatedDuration` field in the `Route` table.
+  """
+  estimatedDuration_sum(
+    """
+    Set to true to sum the distinct values.
+    """
+    distinct: Boolean = false
+  ): Int @fdc_generated(from: "Route.estimatedDuration", purpose: QUERY_SUM)
+  """
+  ✨ Average the `estimatedDistance` field in the `Route` table.
+  """
+  estimatedDistance_avg(
+    """
+    Set to true to average the distinct values.
+    """
+    distinct: Boolean = false
+  ): Float @fdc_generated(from: "Route.estimatedDistance", purpose: QUERY_AVG)
+  """
+  ✨ Average the `estimatedDuration` field in the `Route` table.
+  """
+  estimatedDuration_avg(
+    """
+    Set to true to average the distinct values.
+    """
+    distinct: Boolean = false
+  ): Float @fdc_generated(from: "Route.estimatedDuration", purpose: QUERY_AVG)
+  """
+  ✨ Minimum of the `createdAt` field in the `Route` table.
+  """
+  createdAt_min: Timestamp @fdc_generated(from: "Route.createdAt", purpose: QUERY_MIN)
+  """
+  ✨ Minimum of the `estimatedDistance` field in the `Route` table.
+  """
+  estimatedDistance_min: Float @fdc_generated(from: "Route.estimatedDistance", purpose: QUERY_MIN)
+  """
+  ✨ Minimum of the `estimatedDuration` field in the `Route` table.
+  """
+  estimatedDuration_min: Int @fdc_generated(from: "Route.estimatedDuration", purpose: QUERY_MIN)
+  """
+  ✨ Maximum of the `createdAt` field in the `Route` table.
+  """
+  createdAt_max: Timestamp @fdc_generated(from: "Route.createdAt", purpose: QUERY_MAX)
+  """
+  ✨ Maximum of the `estimatedDistance` field in the `Route` table.
+  """
+  estimatedDistance_max: Float @fdc_generated(from: "Route.estimatedDistance", purpose: QUERY_MAX)
+  """
+  ✨ Maximum of the `estimatedDuration` field in the `Route` table.
+  """
+  estimatedDuration_max: Int @fdc_generated(from: "Route.estimatedDuration", purpose: QUERY_MAX)
+  """
+  A generated field that is used for caching results in SDKs.
+  """
+  _id: ID! @fdc_generated(from: "Route.id", purpose: ENTITY_ID)
+}
+extend type Session {
+  """
+  Implicit metadata field that cannot be written. It provides extra information about query results.
+  """
+  _metadata: _Metadata @fdc_generated(from: "Session", purpose: METADATA_FIELD)
+  """
+  ✨ Count the number of rows in the `Session` table.
+  """
+  _count: Int! @fdc_generated(from: "Session.", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `Session` table where the `averagePace` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  averagePace_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "Session.averagePace", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `Session` table where the `createdAt` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  createdAt_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "Session.createdAt", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `Session` table where the `distance` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  distance_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "Session.distance", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `Session` table where the `duration` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  duration_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "Session.duration", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `Session` table where the `exerciseTypeId` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  exerciseTypeId_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "Session.exerciseTypeId", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `Session` table where the `id` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  id_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "Session.id", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `Session` table where the `notes` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  notes_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "Session.notes", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `Session` table where the `routeId` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  routeId_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "Session.routeId", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `Session` table where the `sessionDate` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  sessionDate_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "Session.sessionDate", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `Session` table where the `userId` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  userId_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "Session.userId", purpose: QUERY_COUNT)
+  """
+  ✨ Sum the `averagePace` field in the `Session` table.
+  """
+  averagePace_sum(
+    """
+    Set to true to sum the distinct values.
+    """
+    distinct: Boolean = false
+  ): Float @fdc_generated(from: "Session.averagePace", purpose: QUERY_SUM)
+  """
+  ✨ Sum the `distance` field in the `Session` table.
+  """
+  distance_sum(
+    """
+    Set to true to sum the distinct values.
+    """
+    distinct: Boolean = false
+  ): Float @fdc_generated(from: "Session.distance", purpose: QUERY_SUM)
+  """
+  ✨ Sum the `duration` field in the `Session` table.
+  """
+  duration_sum(
+    """
+    Set to true to sum the distinct values.
+    """
+    distinct: Boolean = false
+  ): Int @fdc_generated(from: "Session.duration", purpose: QUERY_SUM)
+  """
+  ✨ Average the `averagePace` field in the `Session` table.
+  """
+  averagePace_avg(
+    """
+    Set to true to average the distinct values.
+    """
+    distinct: Boolean = false
+  ): Float @fdc_generated(from: "Session.averagePace", purpose: QUERY_AVG)
+  """
+  ✨ Average the `distance` field in the `Session` table.
+  """
+  distance_avg(
+    """
+    Set to true to average the distinct values.
+    """
+    distinct: Boolean = false
+  ): Float @fdc_generated(from: "Session.distance", purpose: QUERY_AVG)
+  """
+  ✨ Average the `duration` field in the `Session` table.
+  """
+  duration_avg(
+    """
+    Set to true to average the distinct values.
+    """
+    distinct: Boolean = false
+  ): Float @fdc_generated(from: "Session.duration", purpose: QUERY_AVG)
+  """
+  ✨ Minimum of the `averagePace` field in the `Session` table.
+  """
+  averagePace_min: Float @fdc_generated(from: "Session.averagePace", purpose: QUERY_MIN)
+  """
+  ✨ Minimum of the `createdAt` field in the `Session` table.
+  """
+  createdAt_min: Timestamp @fdc_generated(from: "Session.createdAt", purpose: QUERY_MIN)
+  """
+  ✨ Minimum of the `distance` field in the `Session` table.
+  """
+  distance_min: Float @fdc_generated(from: "Session.distance", purpose: QUERY_MIN)
+  """
+  ✨ Minimum of the `duration` field in the `Session` table.
+  """
+  duration_min: Int @fdc_generated(from: "Session.duration", purpose: QUERY_MIN)
+  """
+  ✨ Minimum of the `sessionDate` field in the `Session` table.
+  """
+  sessionDate_min: Timestamp @fdc_generated(from: "Session.sessionDate", purpose: QUERY_MIN)
+  """
+  ✨ Maximum of the `averagePace` field in the `Session` table.
+  """
+  averagePace_max: Float @fdc_generated(from: "Session.averagePace", purpose: QUERY_MAX)
+  """
+  ✨ Maximum of the `createdAt` field in the `Session` table.
+  """
+  createdAt_max: Timestamp @fdc_generated(from: "Session.createdAt", purpose: QUERY_MAX)
+  """
+  ✨ Maximum of the `distance` field in the `Session` table.
+  """
+  distance_max: Float @fdc_generated(from: "Session.distance", purpose: QUERY_MAX)
+  """
+  ✨ Maximum of the `duration` field in the `Session` table.
+  """
+  duration_max: Int @fdc_generated(from: "Session.duration", purpose: QUERY_MAX)
+  """
+  ✨ Maximum of the `sessionDate` field in the `Session` table.
+  """
+  sessionDate_max: Timestamp @fdc_generated(from: "Session.sessionDate", purpose: QUERY_MAX)
+  """
+  A generated field that is used for caching results in SDKs.
+  """
+  _id: ID! @fdc_generated(from: "Session.id", purpose: ENTITY_ID)
+}
+extend type User {
+  """
+  ✨ List `Route` objects in a one-to-many relationship (where `Route`.`user` is this object).
+  """
+  routes_on_user(
+    """
+    Filter condition to narrow down the query results.
+    """
+    where: Route_Filter
+
+    """
+    Order the query results by specific fields.
+    """
+    orderBy: [Route_Order!]
+
+    """
+    Number of rows to skip before starting to return the results.
+    """
+    offset: Int
+
+    """
+    Maximum number of rows to return (defaults to 100 rows).
+    """
+    limit: Int = 100
+
+    """
+    Set to true to return distinct results.
+    """
+    distinct: Boolean = false
+
+    """
+    Filter condition to apply to the groups of aggregate queries.
+    """
+    having: Route_Having
+  ): [Route!]! @fdc_generated(from: "Route.user", purpose: QUERY_MULTIPLE_ONE_TO_MANY)
+  """
+  ✨ List `Session` objects in a one-to-many relationship (where `Session`.`user` is this object).
+  """
+  sessions_on_user(
+    """
+    Filter condition to narrow down the query results.
+    """
+    where: Session_Filter
+
+    """
+    Order the query results by specific fields.
+    """
+    orderBy: [Session_Order!]
+
+    """
+    Number of rows to skip before starting to return the results.
+    """
+    offset: Int
+
+    """
+    Maximum number of rows to return (defaults to 100 rows).
+    """
+    limit: Int = 100
+
+    """
+    Set to true to return distinct results.
+    """
+    distinct: Boolean = false
+
+    """
+    Filter condition to apply to the groups of aggregate queries.
+    """
+    having: Session_Having
+  ): [Session!]! @fdc_generated(from: "Session.user", purpose: QUERY_MULTIPLE_ONE_TO_MANY)
+  """
+  Implicit metadata field that cannot be written. It provides extra information about query results.
+  """
+  _metadata: _Metadata @fdc_generated(from: "User", purpose: METADATA_FIELD)
+  """
+  ✨ Count the number of rows in the `User` table.
+  """
+  _count: Int! @fdc_generated(from: "User.", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `User` table where the `createdAt` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  createdAt_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "User.createdAt", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `User` table where the `displayName` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  displayName_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "User.displayName", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `User` table where the `email` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  email_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "User.email", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `User` table where the `id` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  id_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "User.id", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `User` table where the `photoUrl` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  photoUrl_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "User.photoUrl", purpose: QUERY_COUNT)
+  """
+  ✨ Minimum of the `createdAt` field in the `User` table.
+  """
+  createdAt_min: Timestamp @fdc_generated(from: "User.createdAt", purpose: QUERY_MIN)
+  """
+  ✨ Maximum of the `createdAt` field in the `User` table.
+  """
+  createdAt_max: Timestamp @fdc_generated(from: "User.createdAt", purpose: QUERY_MAX)
+  """
+  A generated field that is used for caching results in SDKs.
+  """
+  _id: ID! @fdc_generated(from: "User.id", purpose: ENTITY_ID)
+}
+extend type Waypoint {
+  """
+  Implicit metadata field that cannot be written. It provides extra information about query results.
+  """
+  _metadata: _Metadata @fdc_generated(from: "Waypoint", purpose: METADATA_FIELD)
+  """
+  ✨ Count the number of rows in the `Waypoint` table.
+  """
+  _count: Int! @fdc_generated(from: "Waypoint.", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `Waypoint` table where the `elevation` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  elevation_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "Waypoint.elevation", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `Waypoint` table where the `id` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  id_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "Waypoint.id", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `Waypoint` table where the `latitude` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  latitude_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "Waypoint.latitude", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `Waypoint` table where the `longitude` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  longitude_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "Waypoint.longitude", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `Waypoint` table where the `order` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  order_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "Waypoint.order", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `Waypoint` table where the `routeId` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  routeId_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "Waypoint.routeId", purpose: QUERY_COUNT)
+  """
+  ✨ Sum the `elevation` field in the `Waypoint` table.
+  """
+  elevation_sum(
+    """
+    Set to true to sum the distinct values.
+    """
+    distinct: Boolean = false
+  ): Float @fdc_generated(from: "Waypoint.elevation", purpose: QUERY_SUM)
+  """
+  ✨ Sum the `latitude` field in the `Waypoint` table.
+  """
+  latitude_sum(
+    """
+    Set to true to sum the distinct values.
+    """
+    distinct: Boolean = false
+  ): Float @fdc_generated(from: "Waypoint.latitude", purpose: QUERY_SUM)
+  """
+  ✨ Sum the `longitude` field in the `Waypoint` table.
+  """
+  longitude_sum(
+    """
+    Set to true to sum the distinct values.
+    """
+    distinct: Boolean = false
+  ): Float @fdc_generated(from: "Waypoint.longitude", purpose: QUERY_SUM)
+  """
+  ✨ Sum the `order` field in the `Waypoint` table.
+  """
+  order_sum(
+    """
+    Set to true to sum the distinct values.
+    """
+    distinct: Boolean = false
+  ): Int @fdc_generated(from: "Waypoint.order", purpose: QUERY_SUM)
+  """
+  ✨ Average the `elevation` field in the `Waypoint` table.
+  """
+  elevation_avg(
+    """
+    Set to true to average the distinct values.
+    """
+    distinct: Boolean = false
+  ): Float @fdc_generated(from: "Waypoint.elevation", purpose: QUERY_AVG)
+  """
+  ✨ Average the `latitude` field in the `Waypoint` table.
+  """
+  latitude_avg(
+    """
+    Set to true to average the distinct values.
+    """
+    distinct: Boolean = false
+  ): Float @fdc_generated(from: "Waypoint.latitude", purpose: QUERY_AVG)
+  """
+  ✨ Average the `longitude` field in the `Waypoint` table.
+  """
+  longitude_avg(
+    """
+    Set to true to average the distinct values.
+    """
+    distinct: Boolean = false
+  ): Float @fdc_generated(from: "Waypoint.longitude", purpose: QUERY_AVG)
+  """
+  ✨ Average the `order` field in the `Waypoint` table.
+  """
+  order_avg(
+    """
+    Set to true to average the distinct values.
+    """
+    distinct: Boolean = false
+  ): Float @fdc_generated(from: "Waypoint.order", purpose: QUERY_AVG)
+  """
+  ✨ Minimum of the `elevation` field in the `Waypoint` table.
+  """
+  elevation_min: Float @fdc_generated(from: "Waypoint.elevation", purpose: QUERY_MIN)
+  """
+  ✨ Minimum of the `latitude` field in the `Waypoint` table.
+  """
+  latitude_min: Float @fdc_generated(from: "Waypoint.latitude", purpose: QUERY_MIN)
+  """
+  ✨ Minimum of the `longitude` field in the `Waypoint` table.
+  """
+  longitude_min: Float @fdc_generated(from: "Waypoint.longitude", purpose: QUERY_MIN)
+  """
+  ✨ Minimum of the `order` field in the `Waypoint` table.
+  """
+  order_min: Int @fdc_generated(from: "Waypoint.order", purpose: QUERY_MIN)
+  """
+  ✨ Maximum of the `elevation` field in the `Waypoint` table.
+  """
+  elevation_max: Float @fdc_generated(from: "Waypoint.elevation", purpose: QUERY_MAX)
+  """
+  ✨ Maximum of the `latitude` field in the `Waypoint` table.
+  """
+  latitude_max: Float @fdc_generated(from: "Waypoint.latitude", purpose: QUERY_MAX)
+  """
+  ✨ Maximum of the `longitude` field in the `Waypoint` table.
+  """
+  longitude_max: Float @fdc_generated(from: "Waypoint.longitude", purpose: QUERY_MAX)
+  """
+  ✨ Maximum of the `order` field in the `Waypoint` table.
+  """
+  order_max: Int @fdc_generated(from: "Waypoint.order", purpose: QUERY_MAX)
+  """
+  A generated field that is used for caching results in SDKs.
+  """
+  _id: ID! @fdc_generated(from: "Waypoint.id", purpose: ENTITY_ID)
+}

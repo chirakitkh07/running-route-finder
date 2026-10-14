@@ -1,0 +1,143 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+    function isAdmin() {
+      return isSignedIn()
+        && request.auth.token.email in ['kittaphon.nk@gmail.com', 'hkmknas@gmail.com'];
+    }
+
+    // ─── users/{uid} ─────────────────────────────────────────────────────────
+    match /users/{uid} {
+      allow read: if isSignedIn();   // อ่านโปรไฟล์ผู้อื่นได้ (แสดงชื่อ/รูปใน feed)
+      allow write: if isOwner(uid);
+
+      // กิจกรรมส่วนตัว — เจ้าของ create/delete ได้
+      // ผู้ใช้คนอื่นกด like / comment ได้ (update เฉพาะ field ที่กำหนด)
+      match /activities/{activityId} {
+        allow read: if isSignedIn();
+        allow create, delete: if isOwner(uid);
+        allow update: if isSignedIn()
+          && (
+            isOwner(uid)
+            || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likedBy', 'likesCount'])
+            || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['commentsCount'])
+            || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likedBy', 'likesCount', 'commentsCount'])
+          );
+
+        match /comments/{commentId} {
+          allow read: if isSignedIn();
+          allow create: if isSignedIn();
+          allow update, delete: if isSignedIn()
+            && resource.data.uid == request.auth.uid;
+        }
+      }
+
+      // ✅ ผู้ติดต่อฉุกเฉิน / การตั้งค่า
+      match /settings/{settingId} {
+        allow read, write: if isOwner(uid);
+      }
+
+      match /comments/{commentId} {
+        allow read, write: if isOwner(uid);
+      }
+    }
+
+    // ─── activities (Global Community Feed) ──────────────────────────────────
+    match /activities/{activityId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+        && request.resource.data.uid == request.auth.uid;
+      // เจ้าของแก้ไขได้ทุก field / คนอื่นอัปเดตได้เฉพาะ like + comment count
+      allow update: if isSignedIn()
+        && (
+          resource.data.uid == request.auth.uid
+          || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likedBy', 'likesCount'])
+          || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['commentsCount'])
+          || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likedBy', 'likesCount', 'commentsCount'])
+        );
+      allow delete: if isSignedIn()
+        && resource.data.uid == request.auth.uid;
+
+      match /comments/{commentId} {
+        allow read: if isSignedIn();
+        allow create: if isSignedIn();
+        allow update, delete: if isSignedIn()
+          && resource.data.uid == request.auth.uid;
+      }
+    }
+
+    // ─── incidents ────────────────────────────────────────────────────────────
+    // ✅ รายงานเหตุฉุกเฉิน / การก่อสร้าง / สุนัข
+    // อนุญาตให้สมาชิกทุกคนโหวตยืนยัน (update) ได้
+    match /incidents/{incidentId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn()
+        && (
+          resource.data.userId == request.auth.uid
+          || resource.data.uid == request.auth.uid
+          || isAdmin()
+        );
+    }
+
+    // ─── routes (Standard Routes) ─────────────────────────────────────────────
+    match /routes/{routeId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // ─── simulations (ตาราง Simulation ใน ERD) ────────────────────────────────
+    match /simulations/{simId} {
+      allow read: if isSignedIn()
+        && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+
+    // ─── air_quality / weather (ตาราง AirQuality, Weather ใน ERD) ───────────
+    match /air_quality/{docId} {
+      allow read, create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+    match /weather/{docId} {
+      allow read, create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+
+    // ─── ai_moderation_logs ───────────────────────────────────────────────────
+    match /ai_moderation_logs/{logId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update, delete: if false; // ลบ/แก้ไข log ไม่ได้
+    }
+
+    // ─── zones (Running Zones & Discovery Cache) ─────────────────────────────
+    match /zones/{zoneId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+        && ((!request.resource.data.keys().hasAny(['hidden', 'pinned'])
+             || (request.resource.data.hidden == false && request.resource.data.pinned == false))
+            || isAdmin());
+      allow update: if isSignedIn()
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['hidden', 'pinned'])
+            || isAdmin());
+      allow delete: if isAdmin();
+
+      // Subcollection สำหรับบันทึกความนิยมจากมวลชน (S_pop)
+      match /stats/{statDoc} {
+        allow read: if isSignedIn();
+        allow write: if isSignedIn();
+      }
+    }
+
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "flutter": {
+    "platforms": {
+      "web": {
+        "default": {
+          "projectId": "fir-walkrunbike-f6792",
+          "appId": "1:1033737834173:web:c876c9283b31a46abcb1d4",
+          "fileOutput": "web/firebase-config.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "fir-walkrunbike-f6792",
+          "configurations": {
+            "web": "1:1033737834173:web:c876c9283b31a46abcb1d4"
+          }
+        }
+      }
+    }
+  }
+}

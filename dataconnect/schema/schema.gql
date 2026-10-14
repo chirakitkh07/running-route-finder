@@ -1,0 +1,41 @@
+type User @table {
+  displayName: String!
+  email: String
+  photoUrl: String
+  createdAt: Timestamp!
+}
+
+type Route @table {
+  user: User!
+  name: String!
+  description: String
+  startLocation: String
+  endLocation: String
+  estimatedDistance: Float
+  estimatedDuration: Int
+  createdAt: Timestamp!
+}
+
+type ExerciseType @table {
+  name: String!
+}
+
+type Session @table {
+  user: User!
+  route: Route!
+  exerciseType: ExerciseType!
+  sessionDate: Timestamp!
+  distance: Float!
+  duration: Int!
+  notes: String
+  averagePace: Float
+  createdAt: Timestamp!
+}
+
+type Waypoint @table {
+  route: Route!
+  latitude: Float!
+  longitude: Float!
+  order: Int!
+  elevation: Float
+}
