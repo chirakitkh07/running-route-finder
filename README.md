@@ -35,11 +35,15 @@ cp lib/firebase_options.example.dart lib/firebase_options.dart
 # Android
 cp android/app/google-services.example.json android/app/google-services.json
 # แก้ไขใส่ค่าจริงจาก Firebase Console
+
+# iOS: ลงทะเบียน Bundle ID com.example.demo20426 ใน Firebase Console
+# แล้วดาวน์โหลด GoogleService-Info.plist ไปที่ ios/Runner/
+# เพิ่มไฟล์ใน Xcode Runner target และตั้งค่า URL Scheme เป็น REVERSED_CLIENT_ID
 ```
 
 หรือใช้ FlutterFire CLI:
 ```bash
-flutterfire configure --project=YOUR_PROJECT_ID
+flutterfire configure --project=fir-walkrunbike-f6792 --platforms=android,ios,web
 ```
 
 #### 2. Build แอป Flutter

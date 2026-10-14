@@ -11,10 +11,18 @@
           "fileOutput": "web/firebase-config.json"
         }
       },
+      "ios": {
+        "default": {
+          "projectId": "fir-walkrunbike-f6792",
+          "appId": "1:1033737834173:ios:37ce13e3a3ca8737bcb1d4"
+        }
+      },
       "dart": {
         "lib/firebase_options.dart": {
           "projectId": "fir-walkrunbike-f6792",
           "configurations": {
+            "ios": "1:1033737834173:ios:37ce13e3a3ca8737bcb1d4",
+            "android": "1:1033737834173:android:16354e7b6cc5495fbcb1d4",
             "web": "1:1033737834173:web:c876c9283b31a46abcb1d4"
           }
         }
