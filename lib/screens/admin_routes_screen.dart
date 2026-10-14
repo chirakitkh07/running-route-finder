@@ -442,7 +442,18 @@ class _AdminRoutesScreenState extends State<AdminRoutesScreen> {
     try {
       inUse = await _firestoreService.countRouteFavorites([route.id, route.nameEn]);
     } catch (e) {
+      // ตรวจไม่ได้ = ไม่แน่ใจว่ามีผู้ใช้อยู่หรือไม่ → ไม่ให้ลบ (กันลบเส้นทางที่ยังใช้งานโดยไม่ตั้งใจ)
       debugPrint('[AdminRoutes] ตรวจสอบการใช้งานเส้นทางไม่สำเร็จ: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(tr('ตรวจสอบการใช้งานเส้นทางไม่สำเร็จ จึงยังลบไม่ได้ กรุณาลองใหม่',
+                'Could not check whether the route is in use, so it was not deleted. Please try again.')),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      return;
     }
     if (!mounted) return;
     if (inUse > 0) {
