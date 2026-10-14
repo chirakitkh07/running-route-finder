@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math' as math;
 import 'package:geolocator/geolocator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -22,6 +23,7 @@ import '../services/push_service.dart';
 import '../providers/language_provider.dart';
 import '../l10n/app_strings.dart';
 import '../l10n/tr.dart';
+import '../utils/web_wake_lock.dart';
 import 'package:demo20426/providers/theme_provider.dart';
 
 class RecordScreen extends StatefulWidget {
@@ -124,6 +126,8 @@ class _RecordScreenState extends State<RecordScreen>
   OffRouteMonitor? _offRoute;
   bool _offRouteMuted = false;
   static const String _offRouteTag = 'off_route';
+  static const String _prefActiveRunKey = 'active_run_session_v1';
+  int _lastSessionSaveSec = 0;
 
   @override
   void initState() {
@@ -140,7 +144,149 @@ class _RecordScreenState extends State<RecordScreen>
     }
     _loadEmergencyContact();
     // ขอสิทธิ์ GPS ทันทีที่เข้าหน้าจอ (หากยังไม่เคยขอ) เพื่อให้พร้อมเริ่มวิ่ง
-    WidgetsBinding.instance.addPostFrameCallback((_) => _initGps());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initGps();
+      _checkRecoverableSession();
+    });
+  }
+
+  /// ตรวจสอบการวิ่งที่ยังค้างอยู่ (กรณีรีโหลดบนเบราว์เซอร์หรือปิดแอปกลางทาง)
+  Future<void> _checkRecoverableSession() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_prefActiveRunKey);
+      if (raw == null || raw.isEmpty) return;
+
+      final data = json.decode(raw) as Map<String, dynamic>;
+      final startedStr = data['startedAt'] as String?;
+      final seconds = (data['seconds'] as num?)?.toInt() ?? 0;
+      final distKm = (data['distanceKm'] as num?)?.toDouble() ?? 0.0;
+      final ptsRaw = (data['points'] as List?) ?? [];
+      final actType = data['activityType'] as String? ?? 'running';
+
+      if (seconds < 10 || ptsRaw.isEmpty || !mounted) {
+        await _clearSessionPersistence();
+        return;
+      }
+
+      final points = ptsRaw.map((p) => LatLng((p[0] as num).toDouble(), (p[1] as num).toDouble())).toList();
+      final startedAt = startedStr != null ? DateTime.tryParse(startedStr) ?? DateTime.now() : DateTime.now();
+
+      final s = _s;
+      final action = await showDialog<String>(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          backgroundColor: const Color(0xFF1E1E1E),
+          title: Row(
+            children: [
+              const Icon(Icons.history_rounded, color: Color(0xFFFC4C02)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  tr('พบการวิ่งที่ค้างอยู่', 'Unsaved Run Found'),
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            tr(
+              'ระบบพบรอบวิ่งล่าสุดที่บันทึกไว้ (${distKm.toStringAsFixed(2)} กม. ${_formatTime(seconds)})\nคุณต้องการทำต่อหรือบันทึกรอบนี้?',
+              'Found previous recorded session (${distKm.toStringAsFixed(2)} km, ${_formatTime(seconds)}).\nWould you like to resume or save it?',
+            ),
+            style: const TextStyle(color: Colors.white70, height: 1.4),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, 'discard'),
+              child: Text(tr('ละทิ้ง', 'Discard'), style: const TextStyle(color: Colors.white54)),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, 'save'),
+              child: Text(s.saveActivity, style: const TextStyle(color: Color(0xFFFC4C02), fontWeight: FontWeight.bold)),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx, 'resume'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFC4C02),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: Text(tr('วิ่งต่อ', 'Resume')),
+            ),
+          ],
+        ),
+      );
+
+      if (action == 'resume' && mounted) {
+        setState(() {
+          _isRunning = true;
+          _isPaused = false;
+          _seconds = seconds;
+          _distanceKm = distKm;
+          _startedAt = startedAt;
+          _activityType = actType;
+          _routePoints.clear();
+          _routePoints.addAll(points);
+          if (points.isNotEmpty) {
+            _lastPosition = Position(
+              longitude: points.last.longitude,
+              latitude: points.last.latitude,
+              timestamp: DateTime.now(),
+              accuracy: 5.0,
+              altitude: 0.0,
+              altitudeAccuracy: 0.0,
+              heading: 0.0,
+              headingAccuracy: 0.0,
+              speed: 0.0,
+              speedAccuracy: 0.0,
+            );
+          }
+        });
+        WebWakeLockHelper.requestWakeLock();
+        _startTimer();
+        _startLocationTracking();
+      } else if (action == 'save' && mounted) {
+        await _clearSessionPersistence();
+        final pace = (distKm > 0.01 && seconds > 0) ? seconds / distKm : 0.0;
+        await _showSummaryDialog(
+          seconds: seconds,
+          distanceKm: distKm,
+          elevationM: 0,
+          paceSecPerKm: pace,
+          startedAt: startedAt,
+          routePoints: points,
+        );
+      } else {
+        await _clearSessionPersistence();
+      }
+    } catch (e) {
+      debugPrint('[Session Recovery] error: $e');
+    }
+  }
+
+  Future<void> _persistSession() async {
+    try {
+      if (!_isRunning || _routePoints.isEmpty) return;
+      final prefs = await SharedPreferences.getInstance();
+      final data = {
+        'startedAt': _startedAt?.toIso8601String(),
+        'seconds': _seconds,
+        'distanceKm': _distanceKm,
+        'activityType': _activityType,
+        'points': _routePoints.map((p) => [p.latitude, p.longitude]).toList(),
+      };
+      await prefs.setString(_prefActiveRunKey, json.encode(data));
+    } catch (_) {}
+  }
+
+  Future<void> _clearSessionPersistence() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_prefActiveRunKey);
+    } catch (_) {}
   }
 
   /// ตรวจสอบและขอสิทธิ์ GPS ทันทีที่เปิดหน้าจอ เพื่อเตรียมพร้อมก่อนเริ่มวิ่ง
@@ -251,6 +397,7 @@ class _RecordScreenState extends State<RecordScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    WebWakeLockHelper.releaseWakeLock();
     _timer?.cancel();
     _positionSub?.cancel();
     _pulseController.dispose();
@@ -314,6 +461,7 @@ class _RecordScreenState extends State<RecordScreen>
     });
 
     _stopPreviewGps();
+    WebWakeLockHelper.requestWakeLock();
     _startTimer();
     _startLocationTracking();
     _startNoMovementTimer();
@@ -457,18 +605,30 @@ class _RecordScreenState extends State<RecordScreen>
               }
               // หมายเหตุ: _avgPaceSecPerKm ถูกคำนวณใน _startTimer() จาก totalTime/totalDist
 
-              // ─── คำนวณระยะทาง (กรอง GPS noise) ──────────────────────────────
+              // ─── คำนวณระยะทาง (กรอง GPS noise & GPS jump) ──────────────────────────────
               if (_lastPosition != null) {
                 final segmentM = Geolocator.distanceBetween(
                   _lastPosition!.latitude, _lastPosition!.longitude,
                   pos.latitude, pos.longitude,
                 );
-                // กรอง: ต้องเดิน > 1m แต่ < 50m ต่อ update (ป้องกัน GPS กระโดด)
-                if (segmentM > 1.0 && segmentM < 50.0) {
+                final timeDeltaSec = pos.timestamp.difference(_lastPosition!.timestamp).inMilliseconds.abs() / 1000.0;
+                final computedSpeedMps = timeDeltaSec > 0.1 ? segmentM / timeDeltaSec : 0.0;
+
+                // ขีดจำกัดความเร็วสูงสุดที่สมเหตุสมผล:
+                // วิ่ง/เดิน: ไม่เกิน 40 กม./ชม. (~11.1 m/s)
+                // ปั่นจักรยาน: ไม่เกิน 75 กม./ชม. (~20.8 m/s)
+                final maxRealisticSpeed = _activityType == 'cycling' ? 20.8 : 11.1;
+                final isGpsJump = (timeDeltaSec > 0.5 && computedSpeedMps > maxRealisticSpeed) || segmentM > 120.0;
+
+                if (isGpsJump) {
+                  debugPrint('[GPS Filter] Dropped anomalous GPS jump: ${segmentM.toStringAsFixed(1)}m in ${timeDeltaSec.toStringAsFixed(1)}s (${(computedSpeedMps * 3.6).toStringAsFixed(1)} km/h)');
+                } else if (segmentM > 1.0) {
+                  // กรอง GPS drift ต่ำกว่า 1 เมตร
                   _distanceKm += segmentM / 1000.0;
                 }
+
                 // คำนวณ elevation gain (ขาขึ้นเท่านั้น)
-                if (_lastAltitude != null && pos.altitude > _lastAltitude!) {
+                if (!isGpsJump && _lastAltitude != null && pos.altitude > _lastAltitude!) {
                   _totalElevationGain += pos.altitude - _lastAltitude!;
                 }
               }
@@ -477,6 +637,12 @@ class _RecordScreenState extends State<RecordScreen>
               _lastAltitude = pos.altitude;
               // เก็บ GPS point สำหรับเส้นทาง
               _routePoints.add(LatLng(pos.latitude, pos.longitude));
+
+              // บันทึก Session ลง SharedPreferences ทุกๆ 5 วินาที เพื่อป้องกันเว็บรีโหลดกลางทาง
+              if (_seconds - _lastSessionSaveSec >= 5) {
+                _lastSessionSaveSec = _seconds;
+                _persistSession();
+              }
             });
 
             // ─── No-movement detection ──────────────────
@@ -507,6 +673,7 @@ class _RecordScreenState extends State<RecordScreen>
   void _pauseRun() {
     _timer?.cancel();
     _timer = null;
+    WebWakeLockHelper.releaseWakeLock();
     // ไม่ cancel _positionSub ตอน pause —
     // GPS stream และ foreground notification ต้องทำงานต่อเนื่อง
     // เพื่อรักษา background location privilege บน Android
@@ -527,6 +694,7 @@ class _RecordScreenState extends State<RecordScreen>
     }
     _timer?.cancel();
     _timer = null;
+    WebWakeLockHelper.requestWakeLock();
     setState(() {
       _isPaused = false;
       _lastPosition = null; // reset lastPosition เพื่อไม่ให้คำนวณ segment ข้ามช่วง pause
@@ -543,6 +711,8 @@ class _RecordScreenState extends State<RecordScreen>
   Future<void> _stopRun() async {
     _timer?.cancel();
     _noMovementTimer?.cancel();
+    WebWakeLockHelper.releaseWakeLock();
+    await _clearSessionPersistence();
     await _positionSub?.cancel();
     _positionSub = null;
     _startPreviewGps();
@@ -1465,6 +1635,35 @@ class _RecordScreenState extends State<RecordScreen>
                     ],
                   ),
                 ),
+
+                // Web Notification: เตือนให้เปิดหน้าจอค้างไว้ระหว่างวิ่งบนเบราว์เซอร์
+                if (kIsWeb && _isRunning) ...[
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFC4C02).withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFFC4C02).withValues(alpha: 0.4)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.wb_sunny_outlined, size: 16, color: Color(0xFFFC4C02)),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            tr(
+                              'กำลังวิ่งบนเว็บ: กรุณาเปิดหน้าจอค้างไว้ระหว่างวิ่ง',
+                              'Web Tracking: Please keep your screen on while running',
+                            ),
+                            style: const TextStyle(fontSize: 11, color: Colors.white, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
 
                 const SizedBox(height: 6),
 
