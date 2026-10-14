@@ -350,7 +350,12 @@ class _RecordScreenState extends State<RecordScreen>
 
   void _startLocationTracking() {
     late final LocationSettings settings;
-    if (defaultTargetPlatform == TargetPlatform.android) {
+    if (kIsWeb) {
+      settings = const LocationSettings(
+        accuracy: LocationAccuracy.bestForNavigation,
+        distanceFilter: 0,
+      );
+    } else if (defaultTargetPlatform == TargetPlatform.android) {
       settings = AndroidSettings(
         accuracy: LocationAccuracy.bestForNavigation, // เพิ่มจาก high → bestForNavigation
         distanceFilter: 0,

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
@@ -1089,7 +1090,11 @@ class _MapScreenState extends State<MapScreen> {
   void initState() {
     super.initState();
     _loadFavorites();
-    _getCurrentLocation();
+    // บน Web: Safari / Chrome บล็อกการขอ Location Prompt อัตโนมัติใน initState
+    // จะขอตำแหน่งเมื่อผู้ใช้กดปุ่มระบุตำแหน่ง หรือเริ่มใช้งานแผนที่
+    if (!kIsWeb) {
+      _getCurrentLocation();
+    }
     _listenActiveIncidents();
     if (widget.initialZoneId != null) _pendingZoneId = widget.initialZoneId;
     _loadZones();

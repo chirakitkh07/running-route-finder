@@ -44,21 +44,22 @@ class PushService {
   /// ข้อความ push ที่เข้ามาตอนแอปเปิดอยู่ หรือที่ผู้ใช้แตะเปิดจากแถบแจ้งเตือน
   static Stream<RemoteMessage> get onMessage => _messages.stream;
 
+  /// ตรวจสอบว่าระบบรองรับ push notification หรือไม่
+  /// บน Web รองรับผ่าน FCM (Service Worker)
+  /// บน Mobile รองรับผ่าน Native FCM + flutter_local_notifications
   static bool get _supported =>
-      !kIsWeb &&
-      (defaultTargetPlatform == TargetPlatform.android ||
-          defaultTargetPlatform == TargetPlatform.iOS);
+      kIsWeb ||
+      defaultTargetPlatform == TargetPlatform.android ||
+      defaultTargetPlatform == TargetPlatform.iOS;
 
   /// แสดงแจ้งเตือนบนแถบแจ้งเตือนของโทรศัพท์ (ใช้ตอนแอปเปิดอยู่ ซึ่ง FCM ไม่แสดงให้เอง)
-  ///
-  /// ใช้ id 0 + [tag] เดียวกับที่ fcm_worker ส่ง (`android.notification.tag`)
-  /// ถ้าได้ทั้งจากแอปและจาก FCM ระบบจะแทนที่กัน ไม่ขึ้นซ้ำ
+  /// บน Web จะไม่ใช้ flutter_local_notifications
   static Future<void> showSystemNotification({
     required String tag,
     required String title,
     required String body,
   }) async {
-    if (!_supported) return;
+    if (kIsWeb || !_supported) return;
     await init();
     try {
       await _local.show(
@@ -87,7 +88,7 @@ class PushService {
 
   /// ลบแจ้งเตือนบนแถบแจ้งเตือนที่แสดงด้วย [showSystemNotification] (tag เดียวกัน)
   static Future<void> cancelSystemNotification(String tag) async {
-    if (!_supported) return;
+    if (kIsWeb || !_supported) return;
     try {
       await _local.cancel(id: 0, tag: tag);
     } catch (e) {
@@ -100,23 +101,25 @@ class PushService {
     if (_initialized || !_supported) return;
     _initialized = true;
     try {
-      await _local.initialize(
-        settings: const InitializationSettings(
-          android: AndroidInitializationSettings('@mipmap/ic_launcher'),
-          iOS: DarwinInitializationSettings(),
-        ),
-      );
-      await _local
-          .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>()
-          ?.createNotificationChannel(
-            const AndroidNotificationChannel(
-              channelId,
-              'Running Route Finder',
-              description: 'Incident, like and comment alerts',
-              importance: Importance.high,
-            ),
-          );
+      if (!kIsWeb) {
+        await _local.initialize(
+          settings: const InitializationSettings(
+            android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+            iOS: DarwinInitializationSettings(),
+          ),
+        );
+        await _local
+            .resolvePlatformSpecificImplementation<
+                AndroidFlutterLocalNotificationsPlugin>()
+            ?.createNotificationChannel(
+              const AndroidNotificationChannel(
+                channelId,
+                'Running Route Finder',
+                description: 'Incident, like and comment alerts',
+                importance: Importance.high,
+              ),
+            );
+      }
 
       FirebaseMessaging.onMessage.listen(_messages.add);
       FirebaseMessaging.onMessageOpenedApp.listen(_messages.add);
@@ -131,17 +134,38 @@ class PushService {
   }
 
   /// ขอสิทธิ์ + บันทึก token ของผู้ใช้ที่ล็อกอินอยู่
-  static Future<void> registerUser(String uid) async {
+  /// บน Web: ถ้ายังไม่ได้กดเปิดสิทธิ์ หรือไม่ได้ request จาก user gesture จะไม่บังคับขอทันทีเพื่อป้องกัน browser block
+  static Future<void> registerUser(String uid, {bool userInitiated = false}) async {
     if (!_supported) return;
     await init();
     _uid = uid;
+
+    // กฎสำหรับ Web: ถ้าไม่ได้เป็นการกดจากผู้ใช้โดยตรง (userInitiated == false)
+    // ให้เช็คสถานะก่อน ถ้ายังไม่เคยอนุญาต (notDetermined) ห้าม popup กวนใจผู้ใช้ตอนเปิดแอป
+    if (kIsWeb && !userInitiated) {
+      try {
+        final currentSettings = await FirebaseMessaging.instance.getNotificationSettings();
+        if (currentSettings.authorizationStatus != AuthorizationStatus.authorized &&
+            currentSettings.authorizationStatus != AuthorizationStatus.provisional) {
+          debugPrint('[Push Web] skipping prompt on startup; wait for user action');
+          return;
+        }
+      } catch (e) {
+        debugPrint('[Push Web] getNotificationSettings error: $e');
+        return;
+      }
+    }
+
     try {
       final settings = await FirebaseMessaging.instance.requestPermission();
       if (settings.authorizationStatus == AuthorizationStatus.denied) {
         debugPrint('[Push] permission denied');
         return;
       }
-      final token = await FirebaseMessaging.instance.getToken();
+      const vapidKey = String.fromEnvironment('VAPID_KEY');
+      final token = await FirebaseMessaging.instance.getToken(
+        vapidKey: (kIsWeb && vapidKey.isNotEmpty) ? vapidKey : null,
+      );
       if (token != null) await _saveToken(token);
 
       _tokenRefreshSub ??=

@@ -1,9 +1,8 @@
 import 'dart:convert';
-import 'dart:io' show Platform;
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import '../config/api_config.dart';
 import '../models/route_data.dart';
 import 'admin_incidents_screen.dart';
 import 'admin_routes_screen.dart';
@@ -119,27 +118,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     });
   }
 
-  List<String> get _candidateUrls {
-    if (kIsWeb) {
-      return [
-        'http://127.0.0.1:3000/api/admin',
-        'http://localhost:3000/api/admin',
-      ];
-    }
-    try {
-      if (Platform.isAndroid) {
-        return [
-          'http://10.0.2.2:3000/api/admin',
-          'http://127.0.0.1:3000/api/admin',
-          'http://localhost:3000/api/admin',
-        ];
-      }
-    } catch (_) {}
-    return [
-      'http://127.0.0.1:3000/api/admin',
-      'http://localhost:3000/api/admin',
-    ];
-  }
+  List<String> get _candidateUrls => ApiConfig.adminCandidateUrls;
 
   @override
   void initState() {
