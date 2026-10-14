@@ -1316,13 +1316,39 @@ class _RecordScreenState extends State<RecordScreen>
       _showSnack(_s.noEmergencySetPrompt, isError: true);
       return;
     }
-    if (pos != null) {
+    if (pos == null) {
+      await SafetyService.callNumber(_emergencyPhone);
+      return;
+    }
+    // UAT-04: ให้เลือกโทรออกหาผู้ติดต่อฉุกเฉินได้ทันที หรือส่ง SMS พร้อมพิกัด
+    final choice = await showModalBottomSheet<String>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.call_rounded, color: Color(0xFFE53935)),
+              title: Text(tr('โทรหาผู้ติดต่อฉุกเฉิน', 'Call emergency contact')),
+              subtitle: Text(_emergencyPhone),
+              onTap: () => Navigator.pop(ctx, 'call'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.sms_rounded, color: Color(0xFFFC4C02)),
+              title: Text(tr('ส่ง SMS พร้อมพิกัดปัจจุบัน', 'Send SMS with current location')),
+              onTap: () => Navigator.pop(ctx, 'sms'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (choice == 'call') {
+      await SafetyService.callNumber(_emergencyPhone);
+    } else if (choice == 'sms') {
       await SafetyService.sendSOSSms(
         _emergencyPhone, pos.latitude, pos.longitude,
         _emergencyName.isEmpty ? _s.runner : _emergencyName,
       );
-    } else {
-      await SafetyService.callNumber(_emergencyPhone);
     }
   }
 

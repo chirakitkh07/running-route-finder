@@ -703,6 +703,89 @@ class FirestoreService {
       debugPrint('[Firestore] ⚠️ saveEnvironmentSnapshot error: $e');
     }
   }
+
+  // ─── UC-13 E1: บันทึกการแจ้งเตือนความเสี่ยงไว้เป็นหลักฐาน ───────────
+
+  /// บันทึกว่าระบบแสดงคำเตือนความเสี่ยงให้ผู้ใช้เมื่อใด และผู้ใช้ตอบสนองอย่างไร
+  /// [response] = 'ack' (รับทราบ) | 'other' (ดูเส้นทางอื่น) | 'dismissed' (ไม่ตอบสนอง/ปิดหน้าต่าง)
+  Future<void> logRiskWarning({
+    required String userId,
+    required int score,
+    required List<String> reasons,
+    required String source,
+    required String response,
+    String? routeName,
+  }) async {
+    try {
+      await _db.collection('risk_warnings').add({
+        'userId': userId,
+        'score': score,
+        'reasons': reasons,
+        'source': source,
+        'response': response,
+        'routeName': ?routeName,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      debugPrint('[Firestore] ⚠️ logRiskWarning error: $e');
+    }
+  }
+
+  // ─── IT-08: เส้นทางโปรดในบัญชีผู้ใช้ (users/{uid}.savedRoutes) ─────────
+
+  /// ดึงรายการเส้นทางโปรดที่บันทึกไว้ในบัญชี (คืนลิสต์ว่างถ้าไม่มี/ดึงไม่ได้)
+  Future<List<String>> getSavedRoutes(String uid) async {
+    try {
+      final snap = await _userProfileRef(uid).get();
+      final list = snap.data()?['savedRoutes'];
+      return list is List ? list.map((e) => e.toString()).toList() : <String>[];
+    } catch (e) {
+      debugPrint('[Firestore] ⚠️ getSavedRoutes error: $e');
+      return <String>[];
+    }
+  }
+
+  /// บันทึกรายการเส้นทางโปรดเข้าบัญชี (merge — ไม่ทับข้อมูลอื่นของผู้ใช้)
+  Future<void> setSavedRoutes(String uid, List<String> routeIds) async {
+    try {
+      await _userProfileRef(uid).set({
+        'savedRoutes': routeIds,
+        'savedRoutesUpdatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } catch (e) {
+      debugPrint('[Firestore] ⚠️ setSavedRoutes error: $e');
+    }
+  }
+
+  /// UC-08 E2: จำนวนผู้ใช้ที่บันทึกเส้นทางนี้เป็นเส้นทางโปรด (= เส้นทางยังมีการใช้งานอยู่)
+  /// ตรวจทั้งรหัสเส้นทางและชื่อภาษาอังกฤษ (แอปใช้ชื่อภาษาอังกฤษเป็นคีย์ของเส้นทางโปรด)
+  Future<int> countRouteFavorites(List<String> keys) async {
+    final ks = keys.where((k) => k.trim().isNotEmpty).toSet().toList();
+    if (ks.isEmpty) return 0;
+    final snap = await _db
+        .collection('users')
+        .where('savedRoutes', arrayContainsAny: ks.take(10).toList())
+        .limit(50)
+        .get();
+    return snap.docs.length;
+  }
+
+  // ─── จัดการบัญชีผู้ใช้ (Manage User Accounts) — ผู้ดูแลระบบ ─────────────
+
+  /// ดึงรายชื่อผู้ใช้ทั้งหมด (เรียงตามเวลาที่อัปเดตล่าสุด)
+  Future<List<Map<String, dynamic>>> fetchUsersForAdmin({int limit = 300}) async {
+    final snap = await _db.collection('users').limit(limit).get();
+    return snap.docs.map((d) => {...d.data(), 'uid': d.id}).toList();
+  }
+
+  /// ระงับ/คืนสิทธิ์บัญชีผู้ใช้ (ต้องเป็นผู้ดูแลระบบ — ตาม firestore.rules)
+  Future<void> setUserSuspended(String uid, bool suspended, {String? reason}) async {
+    await _userProfileRef(uid).set({
+      'suspended': suspended,
+      'suspendReason': suspended ? (reason ?? '') : FieldValue.delete(),
+      'suspendedAt': suspended ? FieldValue.serverTimestamp() : FieldValue.delete(),
+    }, SetOptions(merge: true));
+  }
 }
 
 

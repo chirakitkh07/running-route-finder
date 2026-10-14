@@ -143,6 +143,26 @@ class _FeedScreenState extends State<FeedScreen> {
         try {
           context.read<NotificationProvider>().updateAirQuality(data);
         } catch (_) {}
+        if (data.fromCache) {
+          // UC-10/11 A1: บริการภายนอกไม่ตอบสนอง ใช้ข้อมูลล่าสุดที่แคชไว้
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(tr(
+                'ไม่สามารถดึงข้อมูลอากาศล่าสุดได้ — แสดงข้อมูลที่บันทึกไว้เมื่อ ${data.fetchedAt.hour.toString().padLeft(2, '0')}:${data.fetchedAt.minute.toString().padLeft(2, '0')} น.',
+                'Could not fetch the latest air data — showing data saved at ${data.fetchedAt.hour.toString().padLeft(2, '0')}:${data.fetchedAt.minute.toString().padLeft(2, '0')}')),
+          ));
+        } else {
+          // IT-04: บันทึกค่าฝุ่น/สภาพอากาศ ณ พิกัดปัจจุบันลงตาราง AirQuality และ Weather
+          _svc.saveEnvironmentSnapshot(
+            latitude: data.latitude,
+            longitude: data.longitude,
+            airQuality: {'pm2_5': data.pm25, 'us_aqi': data.aqi},
+            weather: {
+              'temperature': data.temperature,
+              'humidity': data.humidity,
+              'windspeed': data.windSpeedKmh,
+            },
+          );
+        }
       }
     } catch (e) {
       if (mounted) setState(() { _airError = e.toString(); _loadingAir = false; });

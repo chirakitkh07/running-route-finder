@@ -7,6 +7,7 @@ import '../models/route_data.dart';
 import 'admin_incidents_screen.dart';
 import 'admin_routes_screen.dart';
 import 'admin_zones_screen.dart';
+import 'admin_users_screen.dart';
 import '../l10n/tr.dart';
 import 'package:provider/provider.dart';
 import '../providers/language_provider.dart';
@@ -428,6 +429,32 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           style: OutlinedButton.styleFrom(
                             foregroundColor: const Color(0xFF3498DB),
                             side: const BorderSide(color: Color(0xFF3498DB)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        // Manage User Accounts (รูปที่ 3.8): ระงับ/คืนสิทธิ์บัญชีผู้ใช้
+                        OutlinedButton.icon(
+                          onPressed: () async {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const AdminUsersScreen(),
+                              ),
+                            );
+                            _fetchDashboardData();
+                          },
+                          icon: const Icon(Icons.manage_accounts_outlined, size: 16),
+                          label: Text(tr('จัดการผู้ใช้', 'Manage Users')),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: const Color(0xFF8E44AD),
+                            side: const BorderSide(color: Color(0xFF8E44AD)),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),

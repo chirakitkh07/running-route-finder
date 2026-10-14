@@ -106,7 +106,8 @@ class AiModerationService {
     for (final modelName in _modelCandidates) {
       debugPrint('[AiModeration] 🔄 ลอง model: $modelName');
       try {
-        final url = Uri.parse('$_baseUrl/$modelName:generateContent?key=$_apiKey');
+        // key แบบใหม่ (AQ.) ส่งทาง header x-goog-api-key ตามเอกสาร Google — ห้ามส่งซ้ำใน ?key=
+        final url = Uri.parse('$_baseUrl/$modelName:generateContent');
 
         final body = jsonEncode({
           'contents': [
@@ -118,19 +119,31 @@ class AiModerationService {
           ],
           'generationConfig': {
             'temperature': 0.0,
-            'maxOutputTokens': 512,
+            // model รุ่น thinking ใช้ token คิดก่อนตอบ → 512 ทำให้ JSON ขาด/ว่าง
+            'maxOutputTokens': 2048,
+            'responseMimeType': 'application/json',
           },
         });
 
         final response = await http
             .post(
               url,
-              headers: {'Content-Type': 'application/json'},
+              headers: {
+                'Content-Type': 'application/json',
+                'x-goog-api-key': _apiKey,
+              },
               body: body,
             )
             .timeout(const Duration(seconds: 15));
 
         debugPrint('[AiModeration] HTTP ${response.statusCode} ($modelName)');
+
+        if (response.statusCode == 401 || response.statusCode == 403) {
+          // key ใช้ไม่ได้/ถูกระงับ — ลอง model อื่นไม่ช่วย
+          lastError = 'HTTP ${response.statusCode} (API key ถูกปฏิเสธ): ${response.body}';
+          debugPrint('[AiModeration] ❌ $lastError');
+          break;
+        }
 
         if (response.statusCode == 404 || response.statusCode == 400) {
           lastError = 'HTTP ${response.statusCode}: ${response.body}';
@@ -154,7 +167,16 @@ class AiModerationService {
 
         final content = candidates[0]['content'] as Map<String, dynamic>?;
         final parts = content?['parts'] as List<dynamic>?;
-        final text = (parts?[0]['text'] as String?) ?? '';
+        // model รุ่น thinking อาจแยกคำตอบเป็นหลาย part (part ความคิดมี thought: true) → รวมเฉพาะคำตอบ
+        final text = (parts ?? const [])
+            .whereType<Map<String, dynamic>>()
+            .where((p) => p['thought'] != true)
+            .map((p) => (p['text'] as String?) ?? '')
+            .join();
+        final finishReason = candidates[0]['finishReason'];
+        if (finishReason != null && finishReason != 'STOP') {
+          debugPrint('[AiModeration] ⚠️ finishReason=$finishReason ($modelName)');
+        }
 
         debugPrint('[AiModeration] ✅ Model "$modelName" ตอบกลับ: $text');
 
@@ -230,8 +252,13 @@ Example: {"valid": false, "confidence": 0.97, "reason": "contains phone number",
       final isValid = data['valid'] as bool? ?? true;
       final reason = (data['reason'] as String?) ?? '';
       final userMsg = (data['user_message'] as String?) ?? '';
-      final confidence =
-          ((data['confidence'] as num?)?.toDouble() ?? 0.5).clamp(0.0, 1.0).toDouble();
+      final rawConfidence = data['confidence'] as num?;
+      if (rawConfidence == null) {
+        // ไม่มีคะแนนความเชื่อมั่น → ตัดสินไม่ได้ (เดิมใช้ 0.5 ทำให้ pending ทุกครั้งแบบเงียบ ๆ)
+        debugPrint('[AiModeration] ⚠️ response ไม่มี confidence: $jsonStr');
+        return ModerationResult.apiError('Missing confidence');
+      }
+      final confidence = rawConfidence.toDouble().clamp(0.0, 1.0).toDouble();
 
       if (!isValid) {
         debugPrint('[AiModeration] ❌ ไม่ผ่าน: $reason');

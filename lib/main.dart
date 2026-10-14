@@ -12,6 +12,7 @@ import 'services/auth_service.dart';
 import 'services/push_service.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
+import 'widgets/suspension_guard.dart';
 String? _firebaseError;
 
 void main() async {
@@ -134,7 +135,8 @@ class AuthGate extends StatelessWidget {
                     .addPostFrameCallback((_) => FirebaseAuth.instance.signOut());
                 return const LoginScreen();
               }
-              return const HomeScreen();
+              // บัญชีที่ผู้ดูแลระบบระงับ → แสดงหน้าแจ้งระงับแทน (Manage User Accounts)
+              return SuspensionGuard(key: ValueKey(user.uid), user: user, child: const HomeScreen());
             }
             return const LoginScreen();
           },

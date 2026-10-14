@@ -437,6 +437,31 @@ class _AdminRoutesScreenState extends State<AdminRoutesScreen> {
 
   // ─── Normal Flow 3.3 & E2: Delete Route Confirmation ─────
   Future<void> _confirmDeleteRoute(RunningRoute route) async {
+    // UC-08 E2: เส้นทางที่ผู้ใช้ยังบันทึกเป็นเส้นทางโปรดอยู่ = มีการใช้งานอยู่ → ป้องกันการลบ
+    int inUse = 0;
+    try {
+      inUse = await _firestoreService.countRouteFavorites([route.id, route.nameEn]);
+    } catch (e) {
+      debugPrint('[AdminRoutes] ตรวจสอบการใช้งานเส้นทางไม่สำเร็จ: $e');
+    }
+    if (!mounted) return;
+    if (inUse > 0) {
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          title: Text(tr('ลบเส้นทางไม่ได้', 'Cannot delete route')),
+          content: Text(tr(
+              'เส้นทาง "${route.name}" ยังถูกบันทึกเป็นเส้นทางโปรดโดยผู้ใช้ $inUse คน จึงถือว่ามีการใช้งานอยู่ ระบบป้องกันการลบ (UC-08 E2)\nแนะนำให้แก้ไขข้อมูลเส้นทางแทนการลบ',
+              'Route "${route.nameEn}" is still saved as a favorite by $inUse user(s), so it is in use and cannot be deleted (UC-08 E2).\nEdit the route instead.')),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('ตกลง', 'OK'))),
+          ],
+        ),
+      );
+      return;
+    }
+    if (!mounted) return;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(

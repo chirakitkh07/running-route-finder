@@ -1169,6 +1169,20 @@ class _MapScreenState extends State<MapScreen> {
     final prefs = await SharedPreferences.getInstance();
     final saved = prefs.getStringList('savedRoutes') ?? [];
     if (mounted) setState(() => _savedRouteIds = saved.toSet());
+    // IT-08: รวมเส้นทางโปรดที่บันทึกไว้ในบัญชี (เปลี่ยนเครื่อง/ติดตั้งใหม่ก็ยังอยู่)
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+    final cloud = await _firestoreService.getSavedRoutes(uid);
+    final merged = {...saved, ...cloud};
+    if (merged.length != saved.length) {
+      await prefs.setStringList('savedRoutes', merged.toList());
+    }
+    if (mounted && merged.length != _savedRouteIds.length) {
+      setState(() => _savedRouteIds = merged);
+    }
+    if (merged.length != cloud.length) {
+      _firestoreService.setSavedRoutes(uid, merged.toList());
+    }
   }
 
   Future<void> _toggleFavorite(String routeId) async {
@@ -1181,6 +1195,9 @@ class _MapScreenState extends State<MapScreen> {
       }
     });
     await prefs.setStringList('savedRoutes', _savedRouteIds.toList());
+    // IT-08: บันทึกเส้นทางโปรดเข้าบัญชีส่วนตัว
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid != null) _firestoreService.setSavedRoutes(uid, _savedRouteIds.toList());
   }
 
   Future<void> _fetchRoutePm25(RunningRoute route) async {
@@ -1386,12 +1403,118 @@ class _MapScreenState extends State<MapScreen> {
           style: TextStyle(height: 1.6, fontSize: 14, color: pal.textSub),
         ),
         actions: [
+          // UC-13 A1: เลือกดูเส้นทางอื่น
           TextButton(
-            onPressed: () => Navigator.pop(ctx),
+            onPressed: () => Navigator.pop(ctx, 'other'),
+            child: Text(tr('ดูเส้นทางอื่น', 'View other routes')),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, 'ack'),
             child: Text(_s.acknowledge, style: const TextStyle(fontWeight: FontWeight.w700, color: Color(0xFFE53935))),
           ),
         ],
       ),
+    ).then((choice) {
+      // UC-13 E1: บันทึกการแจ้งเตือนไว้เป็นหลักฐาน (รวมกรณีผู้ใช้ไม่ตอบสนอง/ปิดหน้าต่าง)
+      _logRiskWarning(effective, const [], 'popular_route',
+          choice is String ? choice : 'dismissed', routeName: route.nameEn);
+      if (choice == 'other' && mounted) {
+        _clearRoute();
+        setState(() => _showRouteList = true);
+      }
+    });
+  }
+
+  /// UC-13: แสดงคำเตือนความเสี่ยงแบบป๊อปอัปพร้อมเหตุผล เมื่อคะแนนความปลอดภัยต่ำกว่าเกณฑ์ (0–39)
+  /// ใช้กับเส้นทางที่ผู้ใช้วางเอง และเส้นทางวงรอบในโซน
+  void _showRouteRiskWarning(Map<String, dynamic>? safety, {required String source}) {
+    final s = safety?['safety'];
+    if (s is! Map) return;
+    final score = (s['score'] as num?)?.toInt();
+    if (score == null || !SafetyScoreEngine.shouldWarn(score)) return;
+    final reasons = ((s['alerts'] as List?) ?? const [])
+        .map((e) => e.toString())
+        .where((a) => !a.startsWith('⛔'))
+        .take(4)
+        .toList();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      final choice = await showDialog<String>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          title: Row(
+            children: [
+              const Text('⛔', style: TextStyle(fontSize: 26)),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  tr('เส้นทางนี้มีความเสี่ยงสูง ($score/100)', 'High-risk route ($score/100)'),
+                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+                ),
+              ),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  tr('คะแนนความปลอดภัยต่ำกว่า ${SafetyScoreEngine.cautionThreshold} ควรพิจารณาก่อนออกกำลังกาย เนื่องจาก:',
+                      'The safety score is below ${SafetyScoreEngine.cautionThreshold}. Please consider these factors:'),
+                  style: TextStyle(height: 1.5, fontSize: 14, color: pal.textSub),
+                ),
+                const SizedBox(height: 8),
+                if (reasons.isEmpty)
+                  Text(tr('• หลายปัจจัยรวมกันทำให้คะแนนต่ำ', '• Several factors combined lower the score'),
+                      style: TextStyle(fontSize: 13, color: pal.text))
+                else
+                  ...reasons.map((r) => Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: Text(r, style: TextStyle(fontSize: 13, height: 1.4, color: pal.text)),
+                      )),
+              ],
+            ),
+          ),
+          actions: [
+            // UC-13 A1: ดูเส้นทางอื่น → กลับไปเลือกจุดค้นหาเส้นทางใหม่
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, 'other'),
+              child: Text(tr('ดูเส้นทางอื่น', 'View other routes')),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, 'ack'),
+              child: Text(_s.acknowledge,
+                  style: const TextStyle(fontWeight: FontWeight.w700, color: Color(0xFFE53935))),
+            ),
+          ],
+        ),
+      );
+      // UC-13 E1: ไม่ว่าผู้ใช้จะตอบสนองหรือไม่ ยังใช้เส้นทางต่อได้ แต่บันทึกการแจ้งเตือนไว้เป็นหลักฐาน
+      _logRiskWarning(score, reasons, source, choice ?? 'dismissed');
+      if (choice == 'other' && mounted) {
+        if (source == 'zone_loop') {
+          _clearRoutePlan();
+          setState(() => _isRoutePlanMode = false);
+        } else {
+          _clearRoutePlan();
+        }
+      }
+    });
+  }
+
+  void _logRiskWarning(int score, List<String> reasons, String source, String response,
+      {String? routeName}) {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+    _firestoreService.logRiskWarning(
+      userId: uid,
+      score: score,
+      reasons: reasons,
+      source: source,
+      response: response,
+      routeName: routeName,
     );
   }
 
@@ -1733,6 +1856,7 @@ class _MapScreenState extends State<MapScreen> {
           _isRoutePlanMode = true;
         });
         _fitMapToPath(activePath);
+        _showRouteRiskWarning(safety, source: 'zone_loop'); // UC-13
       }
     } catch (e) {
       if (mounted) setState(() => _isGeneratingLoop = false);
@@ -1868,13 +1992,19 @@ class _MapScreenState extends State<MapScreen> {
           _isFetchingRoutePlan = false;
         });
         if (activePath.isNotEmpty) _fitMapToPath(activePath);
+        _showRouteRiskWarning(safety, source: 'plan'); // UC-13
         // บันทึกข้อมูลคุณภาพอากาศ/สภาพอากาศ ณ เวลานั้น (ตาราง AirQuality, Weather ใน ERD)
-        _firestoreService.saveEnvironmentSnapshot(
-          latitude: mid.latitude,
-          longitude: mid.longitude,
-          airQuality: safety['airQuality'] as Map,
-          weather: safety['weather'] as Map,
-        );
+        // บันทึกเฉพาะค่าที่ดึงสดจริง (ไม่บันทึกค่าประมาณ/ค่าจากแคช)
+        final safetyMeta = safety['safety'] as Map;
+        if (safetyMeta['isEstimate'] != true &&
+            ((safetyMeta['usedCache'] as List?)?.isEmpty ?? true)) {
+          _firestoreService.saveEnvironmentSnapshot(
+            latitude: mid.latitude,
+            longitude: mid.longitude,
+            airQuality: safety['airQuality'] as Map,
+            weather: safety['weather'] as Map,
+          );
+        }
         await _fetchElevation(activePath);
         // บันทึกผลการจำลอง (ตาราง Simulation ใน ERD)
         final uid = FirebaseAuth.instance.currentUser?.uid;

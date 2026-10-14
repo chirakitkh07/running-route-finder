@@ -19,9 +19,20 @@ service cloud.firestore {
     }
 
     // ─── users/{uid} ─────────────────────────────────────────────────────────
+    // ฟิลด์สถานะระงับบัญชี — แก้ได้เฉพาะผู้ดูแลระบบ (Manage User Accounts)
+    function suspensionKeys() {
+      return ['suspended', 'suspendReason', 'suspendedAt'];
+    }
+
     match /users/{uid} {
       allow read: if isSignedIn();   // อ่านโปรไฟล์ผู้อื่นได้ (แสดงชื่อ/รูปใน feed)
-      allow write: if isOwner(uid);
+      allow create: if isOwner(uid)
+        && !request.resource.data.keys().hasAny(suspensionKeys());
+      allow update: if (isOwner(uid)
+          && !request.resource.data.diff(resource.data).affectedKeys().hasAny(suspensionKeys()))
+        || (isAdmin()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(suspensionKeys()));
+      allow delete: if isOwner(uid);
 
       // กิจกรรมส่วนตัว — เจ้าของ create/delete ได้
       // ผู้ใช้คนอื่นกด like / comment ได้ (update เฉพาะ field ที่กำหนด)
@@ -120,6 +131,15 @@ service cloud.firestore {
     }
     match /weather/{docId} {
       allow read, create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+
+    // ─── risk_warnings (UC-13 E1: หลักฐานการแจ้งเตือนความเสี่ยง) ─────────────
+    match /risk_warnings/{docId} {
+      allow read: if isSignedIn()
+        && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid;
       allow update, delete: if isAdmin();
     }
 

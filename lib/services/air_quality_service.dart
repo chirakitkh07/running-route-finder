@@ -18,6 +18,9 @@ class AirQualityData {
   final double longitude;
   final DateTime fetchedAt;
 
+  /// UC-10/11 A1: true = บริการภายนอกไม่ตอบสนอง จึงใช้ข้อมูลล่าสุดที่จัดเก็บชั่วคราว (Cache)
+  final bool fromCache;
+
   AirQualityData({
     required this.pm25,
     required this.pm10,
@@ -31,7 +34,25 @@ class AirQualityData {
     required this.latitude,
     required this.longitude,
     required this.fetchedAt,
+    this.fromCache = false,
   });
+
+  /// สำเนาเดิมแต่ระบุว่ามาจากแคช
+  AirQualityData asCached() => AirQualityData(
+        pm25: pm25,
+        pm10: pm10,
+        ozone: ozone,
+        temperature: temperature,
+        humidity: humidity,
+        windSpeedKmh: windSpeedKmh,
+        visibilityKm: visibilityKm,
+        aqi: aqi,
+        aqiLabel: aqiLabel,
+        latitude: latitude,
+        longitude: longitude,
+        fetchedAt: fetchedAt,
+        fromCache: true,
+      );
 
   /// สีตาม AQI
   int get aqiColorValue {
@@ -132,8 +153,40 @@ class AirQualityService {
     }
   }
 
-  /// ดึงข้อมูลคุณภาพอากาศและสภาพอากาศจาก Open-Meteo (ฟรี ไม่ต้อง Key)
+  // ─── UC-10/11 A1: ข้อมูลที่จัดเก็บชั่วคราว (Cache) ─────────────
+  /// อายุสูงสุดของข้อมูลในแคชที่ยอมให้ใช้แทนเมื่อบริการภายนอกล่ม/ช้า
+  static const Duration cacheMaxAge = Duration(hours: 1);
+  static AirQualityData? _lastGood;
+
+  /// ข้อมูลล่าสุดที่ดึงสำเร็จ (null = ยังไม่มี)
+  static AirQualityData? get lastCached => _lastGood;
+
+  /// ใช้แคชได้หรือไม่ (มีข้อมูลและอายุไม่เกิน [cacheMaxAge])
+  static bool canUseCache([DateTime? now]) {
+    final c = _lastGood;
+    if (c == null) return false;
+    return (now ?? DateTime.now()).difference(c.fetchedAt) <= cacheMaxAge;
+  }
+
+  /// สำหรับทดสอบ: ตั้ง/ล้างแคช
+  static void debugSetCache(AirQualityData? data) => _lastGood = data;
+
+  /// ดึงข้อมูลคุณภาพอากาศและสภาพอากาศ — ถ้าบริการภายนอกล่มหรือช้าเกิน 10 วินาที
+  /// จะใช้ข้อมูลล่าสุดที่แคชไว้ (ไม่เกิน 1 ชั่วโมง) แทน (UC-10/11 A1)
+  /// ถ้าไม่มีแคชให้ใช้ จะโยน Exception ตามเดิม (UC-10/11 E1)
   static Future<AirQualityData> fetchAirQuality() async {
+    try {
+      final fresh = await _fetchAirQualityLive();
+      _lastGood = fresh;
+      return fresh;
+    } catch (e) {
+      if (canUseCache()) return _lastGood!.asCached();
+      rethrow;
+    }
+  }
+
+  /// ดึงข้อมูลคุณภาพอากาศและสภาพอากาศจาก Open-Meteo (ฟรี ไม่ต้อง Key)
+  static Future<AirQualityData> _fetchAirQualityLive() async {
     final coords = await _getCoords();
     final lat = coords.lat;
     final lng = coords.lng;
